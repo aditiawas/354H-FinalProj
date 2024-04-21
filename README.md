@@ -1,5 +1,5 @@
 # 354H-FinalProj
-CS 354H Computer Graphics Final Project
+CS 354H Computer Graphics Final Project --> https://www.cs.utexas.edu/~graphics/s24/cs354h/final/overview/
 
 [ ] Implement Catmull-Clark.\
 [ ] Implement Loop subdivision.\
