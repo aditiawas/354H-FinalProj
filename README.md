@@ -9,6 +9,6 @@ CS 354H Computer Graphics Final Project --> https://www.cs.utexas.edu/~graphics/
 To compile, use the following command:\
 g++ -o smoothing smoothing.cpp -lfltk -lfltk_images
 
-# Summary
-## GUI
+## Summary
+### GUI
 Added file browser, drop down, process button, slider and about menu
