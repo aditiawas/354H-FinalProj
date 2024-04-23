@@ -1,22 +1,30 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<vector>
+#include<unordered_map>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include "subdivobjects.h"
 using namespace std;
 
 struct catmullClark{
+    public:
 
-    vector<glm::vec3> quadVertices;
-    vector<QuadFace*> quadFaces;
-    vector<glm::vec3> quadNormals;
+        vector<glm::vec3> quadVertices;
+        vector<QuadFace*> quadFaces;
+        vector<glm::vec3> quadNormals;
+        vector<int> countFacesAdjacent;
+        unordered_map<string,int> edgesToFaces;
+        void initializeEdges();
+
 
     catmullClark(vector<glm::vec3> vertices, vector<QuadFace*> faces )
     {
         quadVertices = vertices;
         quadFaces = faces;
         quadNormals.clear();
+        countFacesAdjacent.clear();
+        edgesToFaces.clear();
 
         for(int i=0; i<quadFaces.size();i++)
         {
@@ -36,9 +44,9 @@ struct catmullClark{
 
         }
 
-        printf("Size of quadVertices %d", int(quadVertices.size()));
-        printf("Size of quadFaces %d", int(quadFaces.size()));
-        printf("Size of quadNormals %d", int(quadNormals.size()));
+        printf("\n Size of quadVertices %d \n", int(quadVertices.size()));
+        printf("\n Size of quadFaces %d \n", int(quadFaces.size()));
+        printf("\n Size of quadNormals %d \n", int(quadNormals.size()));
 
     }
 
