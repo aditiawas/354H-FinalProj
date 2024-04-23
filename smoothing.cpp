@@ -15,6 +15,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <glm/glm.hpp>
 
 using namespace std;
 
@@ -31,7 +32,7 @@ void aboutCallback(Fl_Widget* widget, void* data) {
 }
 
 //reading the trimesh face from a file
-void performReadTrimesh(const std::string& filename, vector<vector<float>> &vertices, vector<TrimeshFace*> &trimeshfaces )
+void performReadTrimesh(const std::string& filename, vector<glm::vec3> &vertices, vector<TrimeshFace*> &trimeshfaces )
 {   
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -51,11 +52,7 @@ void performReadTrimesh(const std::string& filename, vector<vector<float>> &vert
             if (iss >> x >> y >> z) 
             {
                 printf("Vertex: %5.2f %5.2f %5.2f \n",x,y,z);
-                vector<float> each_vertex; 
-                each_vertex.push_back(x);
-                each_vertex.push_back(y);
-                each_vertex.push_back(z);
-                vertices.push_back(each_vertex);
+                vertices.push_back(glm::vec3(x,y,z));
             } 
             else 
             {
@@ -86,7 +83,7 @@ void performReadTrimesh(const std::string& filename, vector<vector<float>> &vert
 
 }
 
-void performReadQuad(const std::string& filename, vector<vector<float>> &vertices, vector<QuadFace*> &quadfaces )
+void performReadQuad(const std::string& filename, vector<glm::vec3> &vertices, vector<QuadFace*> &quadfaces )
 {   
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -106,11 +103,7 @@ void performReadQuad(const std::string& filename, vector<vector<float>> &vertice
             if (iss >> x >> y >> z) 
             {
                 printf("Vertex: %5.2f %5.2f %5.2f \n",x,y,z);
-                vector<float> each_vertex; 
-                each_vertex.push_back(x);
-                each_vertex.push_back(y);
-                each_vertex.push_back(z);
-                vertices.push_back(each_vertex);
+                vertices.push_back(glm::vec3(x,y,z));
             } 
             else 
             {
@@ -148,7 +141,7 @@ std::string performOperation(const std::string& filename, int option, int slider
      string option_str = std::to_string(option);
      string temp = filename + " - Option: " + option_str + " - Slider Value: " + std::to_string(sliderValue);
      cout << temp;
-     vector<vector<float>> vertices;
+     vector<glm::vec3> vertices;
      if(option==1) //loop subdivision
      {    
         vector<TrimeshFace*> trimeshfaces;
