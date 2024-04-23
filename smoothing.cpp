@@ -30,19 +30,8 @@ void aboutCallback(Fl_Widget* widget, void* data) {
     fl_open_uri("https://github.com/aditiawas/354H-FinalProj");
 }
 
-// Function to perform the operation on the selected file
-std::string performOperation(const std::string& filename, int option, int sliderValue) {
-    // Placeholder for operation logic
-     string temp = filename + " - Option: " + std::to_string(option) + " - Slider Value: " + std::to_string(sliderValue);
-     cout << temp;
-     return temp;
-         
-
-}
-
-
 //reading the trimesh face from a file
-void performReadTrimesh(const std::string& filename, vector<vector<int>> &vertices, vector<TrimeshFace*> trimeshfaces )
+void performReadTrimesh(const std::string& filename, vector<vector<int>> &vertices, vector<TrimeshFace*> &trimeshfaces )
 {   
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -97,7 +86,7 @@ void performReadTrimesh(const std::string& filename, vector<vector<int>> &vertic
 
 }
 
-void performReadQuad(const std::string& filename, vector<vector<int>> &vertices, vector<QuadFace*> quadfaces )
+void performReadQuad(const std::string& filename, vector<vector<int>> &vertices, vector<QuadFace*> &quadfaces )
 {   
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -149,6 +138,33 @@ void performReadQuad(const std::string& filename, vector<vector<int>> &vertices,
         }
     }
     file.close();
+
+}
+
+// Function to perform the operation on the selected file
+std::string performOperation(const std::string& filename, int option, int sliderValue) {
+    // Placeholder for operation logic
+
+     string option_str = std::to_string(option);
+     string temp = filename + " - Option: " + option_str + " - Slider Value: " + std::to_string(sliderValue);
+     cout << temp;
+     vector<vector<int>> vertices;
+     if(option==1) //loop subdivision
+     {    
+        vector<TrimeshFace*> trimeshfaces;
+        performReadTrimesh(filename, vertices, trimeshfaces);
+     }
+     else if (option==0) //catmull-clark
+     {
+        vector <QuadFace*> quadfaces;
+        performReadQuad(filename, vertices, quadfaces);
+     }
+     else
+     {
+        temp = "Something sussy going on";
+     }
+    return temp;
+         
 
 }
 
