@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
-
+#ifndef SUBDIVOBJECTS_H_
+#define SUBDIVOBJECTS_H_
 struct TrimeshFace{
 
     int v1,v2,v3; //the vertices corresponding to each face of the trimesh
@@ -50,3 +51,4 @@ struct QuadFace{
 struct Quad{
     //not sure what to put here yet
 };
+#endif

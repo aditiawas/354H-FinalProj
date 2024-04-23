@@ -132,6 +132,7 @@ void performReadQuad(const std::string& filename, vector<glm::vec3> &vertices, v
             std::cerr << "Unknown token: " << token << " in line: " << line << std::endl;
         }
     }
+    printf("Done with readQuad...");
     file.close();
 
 }
@@ -150,9 +151,12 @@ std::string performOperation(const std::string& filename, int option, int slider
         performReadTrimesh(filename, vertices, trimeshfaces);
      }
      else if (option==0) //catmull-clark
-     {
+     {  
+
         vector <QuadFace*> quadfaces;
         performReadQuad(filename, vertices, quadfaces);
+        catmullClark catmullObject = catmullClark(vertices,quadfaces);
+        printf("Entering here!");
      }
      else
      {
