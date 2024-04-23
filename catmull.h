@@ -16,6 +16,8 @@ struct catmullClark{
         vector<int> countFacesAdjacent;
         unordered_map<string,int> edgesToFaces;
         void initializeEdges();
+        void computeFacePoints(vector<glm::vec3> &);
+        void doSubdivision();
 
 
     catmullClark(vector<glm::vec3> vertices, vector<QuadFace*> faces )
