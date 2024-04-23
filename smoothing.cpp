@@ -68,7 +68,7 @@ void performReadTrimesh(const std::string& filename, vector<vector<float>> &vert
             if (iss >> a >> b >> c) 
             {
                 std::cout << "Face: " << a << ", " << b << ", " << c << std::endl;
-                TrimeshFace* tempTrimeshFace = new TrimeshFace(a,b,c);
+                TrimeshFace* tempTrimeshFace = new TrimeshFace(a-1,b-1,c-1);
                 trimeshfaces.push_back(tempTrimeshFace);
 
             } 
@@ -123,7 +123,7 @@ void performReadQuad(const std::string& filename, vector<vector<float>> &vertice
             if (iss >> a >> b >> c >>d) 
             {
                 std::cout << "Face: " << a << ", " << b << ", " << c << ", " <<d << std::endl;
-                QuadFace* tempQuadFace = new QuadFace(a,b,c,d);
+                QuadFace* tempQuadFace = new QuadFace(a-1,b-1,c-1,d-1);
                 quadfaces.push_back(tempQuadFace);
 
             } 
