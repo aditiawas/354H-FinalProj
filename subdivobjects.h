@@ -1,6 +1,5 @@
 #include<stdio.h>
 #include<stdlib.h>
-using namespace std;
 
 struct TrimeshFace{
 
@@ -51,4 +50,3 @@ struct QuadFace{
 struct Quad{
     //not sure what to put here yet
 };
-

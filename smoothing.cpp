@@ -7,6 +7,16 @@
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Value_Slider.H>
 #include <string>
+#include <stdio.h>
+#include <stdlib.h>
+#include "subdivobjects.h"
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+
+using namespace std;
 
 Fl_Window* window;
 Fl_Menu_Bar* menuBar;
@@ -23,7 +33,123 @@ void aboutCallback(Fl_Widget* widget, void* data) {
 // Function to perform the operation on the selected file
 std::string performOperation(const std::string& filename, int option, int sliderValue) {
     // Placeholder for operation logic
-    return filename + " - Option: " + std::to_string(option) + " - Slider Value: " + std::to_string(sliderValue);
+     string temp = filename + " - Option: " + std::to_string(option) + " - Slider Value: " + std::to_string(sliderValue);
+     cout << temp;
+     return temp;
+         
+
+}
+
+
+//reading the trimesh face from a file
+void performReadTrimesh(const std::string& filename, vector<vector<int>> &vertices, vector<TrimeshFace*> trimeshfaces )
+{   
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) 
+    {
+        std::istringstream iss(line);
+        std::string token;
+        iss >> token;
+        if (token == "v") //take in the float values of the xyz positions of each vertices
+        {
+            float x, y, z;
+            if (iss >> x >> y >> z) 
+            {
+                std::cout << "Vertex: " << x << ", " << y << ", " << z << std::endl;
+                vector<int> each_vertex; 
+                each_vertex.push_back(x);
+                each_vertex.push_back(y);
+                each_vertex.push_back(z);
+                vertices.push_back(each_vertex);
+            } 
+            else 
+            {
+                std::cerr << "Invalid vertex format in line: " << line << std::endl;
+            }
+        } 
+        else if (token == "f") //this line corresponds to a face line: tells you how to join the vertices
+        {
+            int a, b, c;
+            if (iss >> a >> b >> c) 
+            {
+                std::cout << "Face: " << a << ", " << b << ", " << c << std::endl;
+                TrimeshFace* tempTrimeshFace = new TrimeshFace(a,b,c);
+                trimeshfaces.push_back(tempTrimeshFace);
+
+            } 
+            else 
+            {
+                std::cerr << "Invalid face format in line: " << line << std::endl;
+            }
+        } 
+        else 
+        {
+            std::cerr << "Unknown token: " << token << " in line: " << line << std::endl;
+        }
+    }
+    file.close();
+
+}
+
+void performReadQuad(const std::string& filename, vector<vector<int>> &vertices, vector<QuadFace*> quadfaces )
+{   
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) 
+    {
+        std::istringstream iss(line);
+        std::string token;
+        iss >> token;
+        if (token == "v") 
+        {
+            float x, y, z;
+            if (iss >> x >> y >> z) 
+            {
+                std::cout << "Vertex: " << x << ", " << y << ", " << z << std::endl;
+                vector<int> each_vertex; 
+                each_vertex.push_back(x);
+                each_vertex.push_back(y);
+                each_vertex.push_back(z);
+                vertices.push_back(each_vertex);
+            } 
+            else 
+            {
+                std::cerr << "Invalid vertex format in line: " << line << std::endl;
+            }
+        } 
+        else if (token == "f") 
+        {
+            int a, b, c, d;
+            if (iss >> a >> b >> c >>d) 
+            {
+                std::cout << "Face: " << a << ", " << b << ", " << c << ", " <<d << std::endl;
+                QuadFace* tempQuadFace = new QuadFace(a,b,c,d);
+                quadfaces.push_back(tempQuadFace);
+
+            } 
+            else 
+            {
+                std::cerr << "Invalid face format in line: " << line << std::endl;
+            }
+        } 
+        else 
+        {
+            std::cerr << "Unknown token: " << token << " in line: " << line << std::endl;
+        }
+    }
+    file.close();
+
 }
 
 // Callback function for the "Open File" menu item
@@ -58,6 +184,8 @@ void processButtonCallback(Fl_Widget* widget, void* data) {
         resultDisplay->buffer()->text(result.c_str());
     }
 }
+
+
 
 int main() {
     // Create the main window
