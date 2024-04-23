@@ -31,7 +31,7 @@ void aboutCallback(Fl_Widget* widget, void* data) {
 }
 
 //reading the trimesh face from a file
-void performReadTrimesh(const std::string& filename, vector<vector<int>> &vertices, vector<TrimeshFace*> &trimeshfaces )
+void performReadTrimesh(const std::string& filename, vector<vector<float>> &vertices, vector<TrimeshFace*> &trimeshfaces )
 {   
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -50,8 +50,8 @@ void performReadTrimesh(const std::string& filename, vector<vector<int>> &vertic
             float x, y, z;
             if (iss >> x >> y >> z) 
             {
-                std::cout << "Vertex: " << x << ", " << y << ", " << z << std::endl;
-                vector<int> each_vertex; 
+                printf("Vertex: %5.2f %5.2f %5.2f \n",x,y,z);
+                vector<float> each_vertex; 
                 each_vertex.push_back(x);
                 each_vertex.push_back(y);
                 each_vertex.push_back(z);
@@ -86,7 +86,7 @@ void performReadTrimesh(const std::string& filename, vector<vector<int>> &vertic
 
 }
 
-void performReadQuad(const std::string& filename, vector<vector<int>> &vertices, vector<QuadFace*> &quadfaces )
+void performReadQuad(const std::string& filename, vector<vector<float>> &vertices, vector<QuadFace*> &quadfaces )
 {   
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -105,8 +105,8 @@ void performReadQuad(const std::string& filename, vector<vector<int>> &vertices,
             float x, y, z;
             if (iss >> x >> y >> z) 
             {
-                std::cout << "Vertex: " << x << ", " << y << ", " << z << std::endl;
-                vector<int> each_vertex; 
+                printf("Vertex: %5.2f %5.2f %5.2f \n",x,y,z);
+                vector<float> each_vertex; 
                 each_vertex.push_back(x);
                 each_vertex.push_back(y);
                 each_vertex.push_back(z);
@@ -148,7 +148,7 @@ std::string performOperation(const std::string& filename, int option, int slider
      string option_str = std::to_string(option);
      string temp = filename + " - Option: " + option_str + " - Slider Value: " + std::to_string(sliderValue);
      cout << temp;
-     vector<vector<int>> vertices;
+     vector<vector<float>> vertices;
      if(option==1) //loop subdivision
      {    
         vector<TrimeshFace*> trimeshfaces;
