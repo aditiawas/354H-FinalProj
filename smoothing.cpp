@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "subdivobjects.h"
+#include "loop.h"
+#include "catmull.h"
 #include <vector>
 #include <iostream>
 #include <fstream>
