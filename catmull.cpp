@@ -33,10 +33,10 @@ void catmullClark::initializeEdges()
         string edge3 = to_string(d_idx) + "->" + to_string(c_idx);
         string edge4 = to_string(a_idx) + "->" + to_string(d_idx); //circular
 
-        edgesToFaces[edge1].push_back(i); //mapping each edge to the INDEX of the quadfaces, not the quadfaces themselves to save space
-        edgesToFaces[edge2].push_back(i);
-        edgesToFaces[edge3].push_back(i);
-        edgesToFaces[edge4].push_back(i);
+        edgesToFaces[edge1]=i; //mapping each edge to the INDEX of the quadfaces, not the quadfaces themselves to save space
+        edgesToFaces[edge2]=i;
+        edgesToFaces[edge3]=i;
+        edgesToFaces[edge4]=i;
     }
 
 }
@@ -85,7 +85,7 @@ void catmullClark::computeEdgePoints(vector<glm::vec3> & facePoints, unordered_m
         //we can get this by indexing
 
         //for edge 1
-        int face_adjacent_to_ab_idx = edgesToFaces[edge_ab][0]; //this wont be our face i (hopefully??)
+        int face_adjacent_to_ab_idx = edgesToFaces[edge_ab]; //this wont be our face i (hopefully??)
 
         glm::vec3 facepoints_ab = facePoints[i] + facePoints[face_adjacent_to_ab_idx];
         glm::vec3 edge_endpoints_ab = quadVertices[a_idx] + quadVertices[b_idx];
@@ -98,7 +98,7 @@ void catmullClark::computeEdgePoints(vector<glm::vec3> & facePoints, unordered_m
 
         //for edge 2
 
-        int face_adjacent_to_bc_idx = edgesToFaces[edge_bc][0]; //this wont be our face i (hopefully??)
+        int face_adjacent_to_bc_idx = edgesToFaces[edge_bc]; //this wont be our face i (hopefully??)
 
         glm::vec3 facepoints_bc = facePoints[i] + facePoints[face_adjacent_to_bc_idx];
         glm::vec3 edge_endpoints_bc = quadVertices[c_idx] + quadVertices[b_idx];
@@ -111,7 +111,7 @@ void catmullClark::computeEdgePoints(vector<glm::vec3> & facePoints, unordered_m
 
         //for edge 3
 
-        int face_adjacent_to_cd_idx = edgesToFaces[edge_cd][0]; //this wont be our face i (hopefully??)
+        int face_adjacent_to_cd_idx = edgesToFaces[edge_cd]; //this wont be our face i (hopefully??)
 
         glm::vec3 facepoints_cd = facePoints[i] + facePoints[face_adjacent_to_cd_idx];
         glm::vec3 edge_endpoints_cd = quadVertices[c_idx] + quadVertices[d_idx];
@@ -124,7 +124,7 @@ void catmullClark::computeEdgePoints(vector<glm::vec3> & facePoints, unordered_m
         
         //for edge 4
 
-        int face_adjacent_to_da_idx = edgesToFaces[edge_da][0]; //this wont be our face i (hopefully??)
+        int face_adjacent_to_da_idx = edgesToFaces[edge_da]; //this wont be our face i (hopefully??)
 
         glm::vec3 facepoints_da = facePoints[i] + facePoints[face_adjacent_to_da_idx];
         glm::vec3 edge_endpoints_da = quadVertices[a_idx] + quadVertices[d_idx];

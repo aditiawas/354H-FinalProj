@@ -14,7 +14,7 @@ struct catmullClark{
         vector<QuadFace*> quadFaces;
         vector<glm::vec3> quadNormals;
         vector<int> countFacesAdjacent;
-        unordered_map<string,vector<int>> edgesToFaces; //edge mapped to each face it is a part of
+        unordered_map<string,int> edgesToFaces; //edge mapped to each face it is a part of
         void initializeEdges();
         void computeFacePoints(vector<glm::vec3>&);
         void computeEdgePoints(vector<glm::vec3>&, unordered_map<string,glm::vec3>&);
