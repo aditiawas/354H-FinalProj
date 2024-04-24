@@ -456,5 +456,10 @@ void catmullClark::doSubdivision()
     this->quadNormals = newQuadNormals;
     this->quadVertices = newQuadVertices;
 
+    printf("\n After subdivision \n");
+    
+    printf("\n After subdivision Size of quadVertices %d \n", int(quadVertices.size()));
+    printf("\n After subdivision Size of quadFaces %d \n", int(quadFaces.size()));
+    printf("\n After subdivision Size of quadNormals %d \n", int(quadNormals.size()));
 
 }

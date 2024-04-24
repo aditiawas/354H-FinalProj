@@ -156,6 +156,7 @@ std::string performOperation(const std::string& filename, int option, int slider
         vector <QuadFace*> quadfaces;
         performReadQuad(filename, vertices, quadfaces);
         catmullClark catmullObject = catmullClark(vertices,quadfaces);
+        catmullObject.doSubdivision();
      }
      else
      {
