@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<string>
 #include "catmull.h"
 using namespace std;
 

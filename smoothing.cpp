@@ -53,27 +53,27 @@ void performReadTrimesh(const std::string& filename, vector<glm::vec3> &vertices
             float x, y, z;
             if (iss >> x >> y >> z) 
             {
-                printf("Vertex: %5.2f %5.2f %5.2f \n",x,y,z);
+                //printf("Vertex: %5.2f %5.2f %5.2f \n",x,y,z);
                 vertices.push_back(glm::vec3(x,y,z));
             } 
             else 
             {
                 std::cerr << "Invalid vertex format in line: " << line << std::endl;
             }
-        } 
+        }
         else if (token == "f") //this line corresponds to a face line: tells you how to join the vertices
         {
             int a, b, c;
             if (iss >> a >> b >> c) 
             {
-                std::cout << "Face: " << a << ", " << b << ", " << c << std::endl;
-                TrimeshFace* tempTrimeshFace = new TrimeshFace(a-1,b-1,c-1);
+                //std::cout << "Face: " << a << ", " << b << ", " << c << std::endl;
+                TrimeshFace* tempTrimeshFace = new TrimeshFace(a-1, b-1, c-1);
                 trimeshfaces.push_back(tempTrimeshFace);
 
             } 
             else 
             {
-                std::cerr << "Invalid face format in line: " << line << std::endl;
+                std::cerr << "Skipping this line: " << line << std::endl;
             }
         } 
         else 
@@ -81,6 +81,7 @@ void performReadTrimesh(const std::string& filename, vector<glm::vec3> &vertices
             std::cerr << "Unknown token: " << token << " in line: " << line << std::endl;
         }
     }
+    printf("\n\nDone with readTrimesh...\n");
     file.close();
 
 }
@@ -104,7 +105,7 @@ void performReadQuad(const std::string& filename, vector<glm::vec3> &vertices, v
             float x, y, z;
             if (iss >> x >> y >> z) 
             {
-                printf("Vertex: %5.2f %5.2f %5.2f \n",x,y,z);
+                //printf("Vertex: %5.2f %5.2f %5.2f \n",x,y,z);
                 vertices.push_back(glm::vec3(x,y,z));
             } 
             else 
@@ -117,7 +118,7 @@ void performReadQuad(const std::string& filename, vector<glm::vec3> &vertices, v
             int a, b, c, d;
             if (iss >> a >> b >> c >>d) 
             {
-                std::cout << "Face: " << a << ", " << b << ", " << c << ", " <<d << std::endl;
+                //std::cout << "Face: " << a << ", " << b << ", " << c << ", " <<d << std::endl;
                 QuadFace* tempQuadFace = new QuadFace(a-1,b-1,c-1,d-1);
                 quadfaces.push_back(tempQuadFace);
 
@@ -139,32 +140,34 @@ void performReadQuad(const std::string& filename, vector<glm::vec3> &vertices, v
 
 // Function to perform the operation on the selected file
 std::string performOperation(const std::string& filename, int option, int sliderValue) {
-    // Placeholder for operation logic
 
-     string option_str = std::to_string(option);
-     string temp = filename + " - Option: " + option_str + " - Slider Value: " + std::to_string(sliderValue);
-     cout << temp;
+     string option_str;
+
      vector<glm::vec3> vertices;
-     if(option==1) //loop subdivision
-     {    
-        vector<TrimeshFace*> trimeshfaces;
-        performReadTrimesh(filename, vertices, trimeshfaces);
-     }
-     else if (option==0) //catmull-clark
+     if (option==0) //catmull-clark
      {  
-
+        option_str = "Catmull-Clark Algorithm";
         vector <QuadFace*> quadfaces;
         performReadQuad(filename, vertices, quadfaces);
         catmullClark catmullObject = catmullClark(vertices,quadfaces);
         catmullObject.doSubdivision();
      }
+     else if(option==1) //loop subdivision
+     {
+        option_str = "Loop Subdivision Algorithm";
+        vector<TrimeshFace*> trimeshfaces;
+        performReadTrimesh(filename, vertices, trimeshfaces);
+        loopSubdiv loopObject = loopSubdiv(vertices, trimeshfaces);
+        loopObject.doSubdivision();
+     }
      else
      {
-        temp = "Something sussy going on";
+        option_str = "Invalid option";
      }
-    return temp;
-         
 
+    string temp = "Option selected: " + option_str + "\nSlider Value: " + std::to_string(sliderValue) + "\n";
+     //cout << temp;
+    return temp;
 }
 
 // Callback function for the "Open File" menu item
@@ -235,7 +238,7 @@ int main() {
     slider->type(FL_HOR_NICE_SLIDER);
     slider->range(1, 10);
     slider->step(1);
-    slider->value(5);
+    slider->value(1);
 
     // Set the callbacks for the buttons and slider
     processButton->callback(processButtonCallback, window);

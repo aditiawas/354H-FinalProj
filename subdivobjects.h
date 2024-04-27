@@ -2,8 +2,8 @@
 #include<stdlib.h>
 #ifndef SUBDIVOBJECTS_H_
 #define SUBDIVOBJECTS_H_
-struct TrimeshFace{
 
+struct TrimeshFace{
     int v1,v2,v3; //the vertices corresponding to each face of the trimesh
     TrimeshFace()
     {
@@ -19,7 +19,6 @@ struct TrimeshFace{
         v3 = vertex3;
 
     }
-
 };
 
 struct Trimesh{
