@@ -34,7 +34,7 @@ void aboutCallback(Fl_Widget* widget, void* data) {
 }
 
 //reading the trimesh face from a file
-void performReadTrimesh(const std::string& filename, vector<glm::vec3> &vertices, vector<TrimeshFace*> &trimeshfaces )
+void performReadTrimesh(const std::string& filename, vector<glm::vec3> &vertices, vector<TrimeshFace> &trimeshfaces )
 {   
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -67,21 +67,21 @@ void performReadTrimesh(const std::string& filename, vector<glm::vec3> &vertices
             if (iss >> a >> b >> c) 
             {
                 //std::cout << "Face: " << a << ", " << b << ", " << c << std::endl;
-                TrimeshFace* tempTrimeshFace = new TrimeshFace(a-1, b-1, c-1);
+                TrimeshFace tempTrimeshFace(a-1, b-1, c-1);
                 trimeshfaces.push_back(tempTrimeshFace);
 
             } 
             else 
             {
-                std::cerr << "Skipping this line: " << line << std::endl;
+                std::cerr << "Invalid face format in line: " << line << std::endl;
             }
         } 
         else 
         {
-            std::cerr << "Unknown token: " << token << " in line: " << line << std::endl;
+            std::cout << "Ignored line: " << line << std::endl;
         }
     }
-    printf("\n\nDone with readTrimesh...\n");
+    //printf("\n\nDone with readTrimesh...\n");
     file.close();
 
 }
@@ -142,6 +142,7 @@ void performReadQuad(const std::string& filename, vector<glm::vec3> &vertices, v
 std::string performOperation(const std::string& filename, int option, int sliderValue) {
 
      string option_str;
+     string temp = "Option selected was: " + option_str + "\nFilename: " + filename + "\nSlider Value: " + std::to_string(sliderValue) + "\n";
 
      vector<glm::vec3> vertices;
      if (option==0) //catmull-clark
@@ -155,17 +156,16 @@ std::string performOperation(const std::string& filename, int option, int slider
      else if(option==1) //loop subdivision
      {
         option_str = "Loop Subdivision Algorithm";
-        vector<TrimeshFace*> trimeshfaces;
+        vector<TrimeshFace> trimeshfaces;
         performReadTrimesh(filename, vertices, trimeshfaces);
-        loopSubdiv loopObject = loopSubdiv(vertices, trimeshfaces);
-        loopObject.doSubdivision();
+        LoopSubdiv loopObject = LoopSubdiv(vertices, trimeshfaces);
+        string log = loopObject.doSubdivision(filename, sliderValue);
+        temp += log;
      }
      else
      {
         option_str = "Invalid option";
      }
-
-    string temp = "Option selected: " + option_str + "\nSlider Value: " + std::to_string(sliderValue) + "\n";
      //cout << temp;
     return temp;
 }
@@ -173,8 +173,8 @@ std::string performOperation(const std::string& filename, int option, int slider
 // Callback function for the "Open File" menu item
 void openFileCallback(Fl_Widget* widget, void* data) {
     // Specify the file types you want to allow
-    const char* fileTypes = "*.txt"; // Change to your desired file extension
-    Fl_File_Chooser chooser(".", fileTypes, Fl_File_Chooser::SINGLE, "Open File");
+    const char* fileTypes = ""; // Change to your desired file extension
+    Fl_File_Chooser chooser("./assets", fileTypes, Fl_File_Chooser::SINGLE, "Open File");
     chooser.show();
 
     // If a file is selected, update the window title
@@ -234,11 +234,11 @@ int main() {
     resultDisplay = new Fl_Text_Display(10, 100, 780, 480);
 
     // Create the slider
-    slider = new Fl_Value_Slider(10, 590, 780, 30, "Slider Value");
+    slider = new Fl_Value_Slider(10, 590, 780, 30, "Number of Iterations");
     slider->type(FL_HOR_NICE_SLIDER);
-    slider->range(1, 10);
+    slider->range(0, 6);
     slider->step(1);
-    slider->value(1);
+    slider->value(0);
 
     // Set the callbacks for the buttons and slider
     processButton->callback(processButtonCallback, window);
