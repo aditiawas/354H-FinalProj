@@ -1,28 +1,24 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<array>
 #ifndef SUBDIVOBJECTS_H_
 #define SUBDIVOBJECTS_H_
 
-struct TrimeshFace{
-    int v1,v2,v3; //the vertices corresponding to each face of the trimesh
+class TrimeshFace {
+public:
+    std::array<int, 3> vertexIndices;
     TrimeshFace()
     {
-        v1 = 0; 
-        v2 = 0;
-        v3 = 0;
-
+        vertexIndices[0] = 0; 
+        vertexIndices[1] = 0;
+        vertexIndices[2] = 0;
     }
     TrimeshFace(int vertex1, int vertex2, int vertex3)
     {
-        v1 = vertex1;
-        v2 = vertex2;
-        v3 = vertex3;
-
+        vertexIndices[0] = vertex1;
+        vertexIndices[1] = vertex2;
+        vertexIndices[2] = vertex3;
     }
-};
-
-struct Trimesh{
-    //not sure what to put here yet
 };
 
 
