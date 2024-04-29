@@ -32,6 +32,8 @@
 *.app
 
 smoothing
-.vscode
+render
 run
 .DS_Store
+.vscode
+*.dSYM
