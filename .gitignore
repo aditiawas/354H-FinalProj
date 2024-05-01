@@ -32,7 +32,6 @@
 *.app
 
 smoothing
-render
 run
 .DS_Store
 .vscode
