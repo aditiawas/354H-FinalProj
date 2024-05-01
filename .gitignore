@@ -33,6 +33,7 @@
 
 smoothing
 run
+render
 .DS_Store
 .vscode
 *.dSYM
