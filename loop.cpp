@@ -1,3 +1,4 @@
+// loop.cpp
 #include <stdio.h>
 #include <stdlib.h>
 #include "loop.h"
@@ -6,109 +7,265 @@
 #include <numeric>
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
+#include <vector>
+#include <unordered_map>
+#include <array>
+#include <sstream>
+
 using namespace std;
 
-//custom hash function
-struct hash_vec3 {
-    size_t operator()(const glm::vec3& v) const {
-        return hash<float>()(v.x) ^ hash<float>()(v.y) ^ hash<float>()(v.z);
+void LoopSubdiv::printSubdividedMesh(std::vector<glm::vec3> v, std::vector<TrimeshFace> f) {
+    // Open the output file
+    //printf("Output file: %s", opfile.c_str());
+    std::ofstream outFile(opfile);
+    if (!outFile.is_open()) {
+        std::cerr << "Failed to open output file" << std::endl;
+        return;
     }
-};
 
-void loopSubdiv::printSubdividedMesh() {
+    // Print vertices to console and file
+    for (const glm::vec3& vertex : v) {
+        //std::cout << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+        outFile << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+    }
 
-    printf("\nSize of Vertices array: %d \n", int(vertices.size()));
-    printf("\nSize of trimeshfaces array: %d \n", int(trimeshFaces.size()));
+    // Print trimesh faces to console and file
+    for (const TrimeshFace face : f) {
+        //std::cout << "f " << face.vertexIndices[0] + 1 << " " << face.vertexIndices[1] + 1 << " " << face.vertexIndices[2] + 1 << "\n";
+        outFile << "f " << face.vertexIndices[0] + 1 << " " << face.vertexIndices[1] + 1 << " " << face.vertexIndices[2] + 1 << "\n";
+    }
 
-    for (const glm::vec3& vertex : vertices)
-        std::cout << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
-
-    for (TrimeshFace* face : trimeshFaces)
-        std::cout << "f " << face->v1 + 1 << " " << face->v2 + 1 << " " << face->v3 + 1 << "\n";
+    // Close the output file
+    outFile.close();
 }
 
-void loopSubdiv::doSubdivision() {
+bool operator==(const glm::vec3& x, const glm::vec3& y) {
+    return x.x == y.x && x.y == y.y && x.z == y.z;
+}
 
-    printf("\nPerforming Loop Subdivision\n");
+double sumXCoords(double sum, const glm::vec3& v) {
+    return sum + v.x;
+}
 
-    //set to store unique vertices
-    unordered_set<glm::vec3, hash_vec3> uniqueVertices(vertices.begin(), vertices.end());
+double sumYCoords(double sum, const glm::vec3& v) {
+    return sum + v.y;
+}
 
-    vector<glm::vec3> newVertices;
-    vector<TrimeshFace*> newFaces;
+double sumZCoords(double sum, const glm::vec3& v) {
+    return sum + v.z;
+}
 
-    for (TrimeshFace* face : trimeshFaces) {
-        unsigned int faceVertexIndices[3] = { face->v1, face->v2, face->v3 };
+std::pair<vector<glm::vec3>, std::vector<TrimeshFace> > LoopSubdiv::subdivLoop(const vector<glm::vec3>& vertices, const std::vector<TrimeshFace>& faces, int iterations) {
+    vector<glm::vec3> currentVertices = vertices;
+    std::vector<TrimeshFace> currentFaces = faces;
 
-        vector<glm::vec3> faceVertices;
-        for (int i = 0; i < 3; i++) {
-            glm::vec3 newVertex = findNewVertex(vertices[faceVertexIndices[i]], face);
-            uniqueVertices.insert(newVertex);
-            newVertices.push_back(newVertex);
-            faceVertices.push_back(newVertex);
+    for (int i = 0; i < iterations; ++i) {
+        vector<glm::vec3> newVertices;
+        std::vector<TrimeshFace> newFaces;
+
+        std::unordered_map<std::string, HalfEdge> halfEdgeDS;
+
+        // Build half-edge data structure
+        for (const TrimeshFace& face : currentFaces) {
+            for (int j = 0; j < 3; ++j) {
+                std::string name = std::to_string(face.vertexIndices[j]) + std::to_string(face.vertexIndices[(j + 1) % 3]);
+                std::string revName = std::to_string(face.vertexIndices[(j + 1) % 3]) + std::to_string(face.vertexIndices[j]);
+                HalfEdge he;
+                he.vertices[0] = currentVertices[face.vertexIndices[j]];
+                he.vertices[1] = currentVertices[face.vertexIndices[(j + 1) % 3]];
+                he.pairHalfEdgeKey = revName;
+                he.face = face.vertexIndices;
+                he.nextHalfEdgeVertices[0] = currentVertices[face.vertexIndices[(j + 1) % 3]];
+                he.nextHalfEdgeVertices[1] = currentVertices[face.vertexIndices[(j - 1 + 3) % 3]];
+                halfEdgeDS[name] = he;
+            }
         }
 
-        glm::vec3 facePoint = findFacePoint(faceVertices);
-        uniqueVertices.insert(facePoint);
-        newVertices.push_back(facePoint);
+        std::unordered_map<std::string, int> vertexLocToIdx;
+        std::unordered_map<int, vector<glm::vec3> > oldVertexNeighbors;
 
-        createNewFaces(newFaces, faceVertices, newVertices);
-    }
+        for (const TrimeshFace& face : currentFaces) {
+            HalfEdge anyHeInFace = halfEdgeDS[std::to_string(face.vertexIndices[0]) + std::to_string(face.vertexIndices[1])];
+            HalfEdge nextHe = halfEdgeDS[std::to_string(face.vertexIndices[1]) + std::to_string(face.vertexIndices[2])];
+            HalfEdge nextToNextHe = halfEdgeDS[std::to_string(face.vertexIndices[2]) + std::to_string(face.vertexIndices[0])];
 
-    //updating in object
-    vertices = vector<glm::vec3>(uniqueVertices.begin(), uniqueVertices.end());
-    trimeshFaces = newFaces;
+            // Update new coordinates inline
+            glm::vec3 midPointA(
+                (3.0 / 8.0) * anyHeInFace.vertices[0].x + (3.0 / 8.0) * anyHeInFace.vertices[1].x +
+                (1.0 / 8.0) * nextHe.vertices[1].x + (1.0 / 8.0) * halfEdgeDS[anyHeInFace.pairHalfEdgeKey].nextHalfEdgeVertices[1].x,
+                (3.0 / 8.0) * anyHeInFace.vertices[0].y + (3.0 / 8.0) * anyHeInFace.vertices[1].y +
+                (1.0 / 8.0) * nextHe.vertices[1].y + (1.0 / 8.0) * halfEdgeDS[anyHeInFace.pairHalfEdgeKey].nextHalfEdgeVertices[1].y,
+                (3.0 / 8.0) * anyHeInFace.vertices[0].z + (3.0 / 8.0) * anyHeInFace.vertices[1].z +
+                (1.0 / 8.0) * nextHe.vertices[1].z + (1.0 / 8.0) * halfEdgeDS[anyHeInFace.pairHalfEdgeKey].nextHalfEdgeVertices[1].z
+            );
 
-    printf("\nAfter subdivision \n");
-    printSubdividedMesh();
-}
+            glm::vec3 midPointC(
+                (3.0 / 8.0) * nextHe.vertices[0].x + (3.0 / 8.0) * nextHe.vertices[1].x +
+                (1.0 / 8.0) * nextToNextHe.vertices[1].x + (1.0 / 8.0) * halfEdgeDS[nextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].x,
+                (3.0 / 8.0) * nextHe.vertices[0].y + (3.0 / 8.0) * nextHe.vertices[1].y +
+                (1.0 / 8.0) * nextToNextHe.vertices[1].y + (1.0 / 8.0) * halfEdgeDS[nextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].y,
+                (3.0 / 8.0) * nextHe.vertices[0].z + (3.0 / 8.0) * nextHe.vertices[1].z +
+                (1.0 / 8.0) * nextToNextHe.vertices[1].z + (1.0 / 8.0) * halfEdgeDS[nextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].z
+            );
 
-glm::vec3 loopSubdiv::findNewVertex(const glm::vec3& vertex, TrimeshFace* face) {
-    unsigned int faceVertices[3] = { face->v1, face->v2, face->v3 };
-    int n = 3;
+            glm::vec3 midPointE(
+                (3.0 / 8.0) * nextToNextHe.vertices[0].x + (3.0 / 8.0) * nextToNextHe.vertices[1].x +
+                (1.0 / 8.0) * anyHeInFace.vertices[1].x + (1.0 / 8.0) * halfEdgeDS[nextToNextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].x,
+                (3.0 / 8.0) * nextToNextHe.vertices[0].y + (3.0 / 8.0) * nextToNextHe.vertices[1].y +
+                (1.0 / 8.0) * anyHeInFace.vertices[1].y + (1.0 / 8.0) * halfEdgeDS[nextToNextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].y,
+                (3.0 / 8.0) * nextToNextHe.vertices[0].z + (3.0 / 8.0) * nextToNextHe.vertices[1].z +
+                (1.0 / 8.0) * anyHeInFace.vertices[1].z + (1.0 / 8.0) * halfEdgeDS[nextToNextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].z
+            );
 
-    //find neighborhood of vertex
-    vector<glm::vec3> neighborhood;
-    for (int i = 0; i < n; i++) {
-        if (vertices[faceVertices[i]] == vertex) {
-            neighborhood.push_back(vertices[faceVertices[(i + 1) % n]]);
-            neighborhood.push_back(vertices[faceVertices[(i + n - 1) % n]]);
+            int miniAIdx;
+            std::string aKey = std::to_string(face.vertexIndices[0]) + "-" + std::to_string(face.vertexIndices[1]);
+            std::string aRevKey = std::to_string(face.vertexIndices[1]) + "-" + std::to_string(face.vertexIndices[0]);
+            if (vertexLocToIdx.count(aKey)) {
+                miniAIdx = vertexLocToIdx[aKey];
+            } else if (vertexLocToIdx.count(aRevKey)) {
+                miniAIdx = vertexLocToIdx[aRevKey];
+            } else {
+                newVertices.push_back(midPointA);
+                miniAIdx = newVertices.size() - 1;
+                vertexLocToIdx[aKey] = miniAIdx;
+            }
+
+            int miniBIdx;
+            std::string bKey = std::to_string(face.vertexIndices[1]);
+            if (vertexLocToIdx.count(bKey)) {
+                miniBIdx = vertexLocToIdx[bKey];
+            } else {
+                newVertices.push_back(anyHeInFace.vertices[1]);
+                miniBIdx = newVertices.size() - 1;
+                vertexLocToIdx[bKey] = miniBIdx;
+            }
+
+            if (oldVertexNeighbors.count(miniBIdx)) {
+                oldVertexNeighbors[miniBIdx].push_back(anyHeInFace.vertices[0]);
+            } else {
+                oldVertexNeighbors[miniBIdx] = std::vector<glm::vec3>(1, anyHeInFace.vertices[0]);
+            }
+
+            int miniCIdx;
+            std::string cKey = std::to_string(face.vertexIndices[1]) + "-" + std::to_string(face.vertexIndices[2]);
+            std::string cRevKey = std::to_string(face.vertexIndices[2]) + "-" + std::to_string(face.vertexIndices[1]);
+            if (vertexLocToIdx.count(cKey)) {
+                miniCIdx = vertexLocToIdx[cKey];
+            } else if (vertexLocToIdx.count(cRevKey)) {
+                miniCIdx = vertexLocToIdx[cRevKey];
+            } else {
+                newVertices.push_back(midPointC);
+                miniCIdx = newVertices.size() - 1;
+                vertexLocToIdx[cKey] = miniCIdx;
+            }
+
+            int miniDIdx;
+            std::string dKey = std::to_string(face.vertexIndices[2]);
+            if (vertexLocToIdx.count(dKey)) {
+                miniDIdx = vertexLocToIdx[dKey];
+            } else {
+                newVertices.push_back(nextHe.vertices[1]);
+                miniDIdx = newVertices.size() - 1;
+                vertexLocToIdx[dKey] = miniDIdx;
+            }
+
+            if (oldVertexNeighbors.count(miniDIdx)) {
+                oldVertexNeighbors[miniDIdx].push_back(nextHe.vertices[0]);
+            } else {
+                oldVertexNeighbors[miniDIdx] = std::vector<glm::vec3>(1, nextHe.vertices[0]);
+            }
+
+            int miniEIdx;
+            std::string eKey = std::to_string(face.vertexIndices[2]) + "-" + std::to_string(face.vertexIndices[0]);
+            std::string eRevKey = std::to_string(face.vertexIndices[0]) + "-" + std::to_string(face.vertexIndices[2]);
+            if (vertexLocToIdx.count(eKey)) {
+                miniEIdx = vertexLocToIdx[eKey];
+            } else if (vertexLocToIdx.count(eRevKey)) {
+                miniEIdx = vertexLocToIdx[eRevKey];
+            } else {
+                newVertices.push_back(midPointE);
+                miniEIdx = newVertices.size() - 1;
+                vertexLocToIdx[eKey] = miniEIdx;
+            }
+
+            int miniFIdx;
+            std::string fKey = std::to_string(face.vertexIndices[0]);
+            if (vertexLocToIdx.count(fKey)) {
+                miniFIdx = vertexLocToIdx[fKey];
+            } else {
+                newVertices.push_back(nextToNextHe.vertices[1]);
+                miniFIdx = newVertices.size() - 1;
+                vertexLocToIdx[fKey] = miniFIdx;
+            }
+
+            if (oldVertexNeighbors.count(miniFIdx)) {
+                oldVertexNeighbors[miniFIdx].push_back(nextToNextHe.vertices[0]);
+            } else {
+                oldVertexNeighbors[miniFIdx] = std::vector<glm::vec3>(1, nextToNextHe.vertices[0]);
+            }
+
+            // The four new faces
+            newFaces.push_back(TrimeshFace( miniAIdx, miniBIdx, miniCIdx ));
+            newFaces.push_back(TrimeshFace( miniCIdx, miniDIdx, miniEIdx ));
+            newFaces.push_back(TrimeshFace( miniEIdx, miniFIdx, miniAIdx ));
+            newFaces.push_back(TrimeshFace( miniAIdx, miniCIdx, miniEIdx ));
         }
-    }
 
-    //apply Loop's rules for vertex calculation
-    glm::vec3 newVertex = (1.0f / n) * vertex;
-    for (const glm::vec3& neighborVertex : neighborhood) {
-        newVertex += (3.0f / (8.0f * n)) * neighborVertex;
-    }
+        // Update old coordinates in newVertices using existing old coordinates
+        for (const auto& vertexPair : oldVertexNeighbors) {
+            int vertexIndex = vertexPair.first;
+            const vector<glm::vec3>& neighborOldVertices = vertexPair.second;
+            int n = neighborOldVertices.size();
 
-    return newVertex;
-}
+            double u = (n == 3) ? 3.0 / 16.0 : 3.0 / (8.0 * n);
 
-glm::vec3 loopSubdiv::findFacePoint(const vector<glm::vec3>& faceVertices) {
-    int n = faceVertices.size();
-    glm::vec3 facePoint(0.0f);
-
-    //apply Loop's rules for face point calculation
-    for (const glm::vec3& vertex : faceVertices) {
-        facePoint += vertex;
-    }
-    facePoint /= n;
-
-    return facePoint;
-}
-
-void loopSubdiv::createNewFaces(vector<TrimeshFace*>& newFaces, const vector<glm::vec3>& faceVertices, const vector<glm::vec3>& newVertices) {
-    int n = faceVertices.size();
-    int vertexIndex = newVertices.size() - faceVertices.size() - 1;
-
-    //create new faces
-    for (int i = 0; i < n; i++) {
-        vector<unsigned int> faceIndices;
-        for (int j = 0; j < n; j++) {
-            faceIndices.push_back(static_cast<unsigned int>(vertices.size() + vertexIndex + j));
+            glm::vec3& vertex = newVertices[vertexIndex];
+            vertex.x = (1.0 - n * u) * vertex.x + u * std::accumulate(neighborOldVertices.begin(), neighborOldVertices.end(), 0.0, sumXCoords);
+            vertex.y = (1.0 - n * u) * vertex.y + u * std::accumulate(neighborOldVertices.begin(), neighborOldVertices.end(), 0.0, sumYCoords);
+            vertex.z = (1.0 - n * u) * vertex.z + u * std::accumulate(neighborOldVertices.begin(), neighborOldVertices.end(), 0.0, sumZCoords);
         }
-        faceIndices.push_back(static_cast<unsigned int>(vertices.size() + newVertices.size() - 1));
-        newFaces.push_back(new TrimeshFace(faceIndices[0], faceIndices[1], faceIndices[2]));
+
+        currentVertices = std::move(newVertices);
+        currentFaces = std::move(newFaces);
     }
+    return std::make_pair(currentVertices, currentFaces);
+}
+
+string LoopSubdiv::doSubdivision(std::string filename, int iter) {
+    opfile = filename;
+    std::stringstream ss;
+
+    if (iter > 0)
+    {
+        opfile = filename + "_op" + std::to_string(iter) + ".out";
+        printf("\nPerforming Loop Subdivision\n");
+        ss << "\nOriginal Mesh Info:\n" << vertices.size() << " vertices, " << trimeshFaces.size() << " faces\n";
+        
+        std::pair<std::vector<glm::vec3>, std::vector<TrimeshFace> > subdivided = subdivLoop(vertices, trimeshFaces, iter);
+        ss << "\nSubdivided Mesh Info:\n" << subdivided.first.size() << " vertices, " << subdivided.second.size() << " faces\n";
+
+        //printf("\nAfter subdivision \n");
+        printSubdividedMesh(subdivided.first, subdivided.second);
+    }
+    string log = ss.str();
+    displayScene();
+    return log;
+}
+
+void LoopSubdiv::displayScene() {
+    // Path to the executable
+    std::string executable = "./render";
+
+    // Arguments to pass to the executable
+    std::string arg1 = opfile;
+
+    // Construct the command string with arguments
+    std::string command = executable + " " + arg1;
+
+    int result = system(command.c_str());
+
+    // Check the return value
+    if (result != 0)
+        std::cout << "\nFailed to run the executable." << std::endl;
 }

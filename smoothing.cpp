@@ -34,8 +34,7 @@ void aboutCallback(Fl_Widget* widget, void* data) {
 }
 
 //reading the trimesh face from a file
-void performReadTrimesh(const std::string& filename, vector<glm::vec3> &vertices, vector<TrimeshFace> &trimeshfaces )
-{   
+void performReadTrimesh(const std::string& filename, vector<glm::vec3>& vertices, vector<TrimeshFace>& trimeshFaces) {
     std::ifstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Failed to open file: " << filename << std::endl;
@@ -43,47 +42,31 @@ void performReadTrimesh(const std::string& filename, vector<glm::vec3> &vertices
     }
 
     std::string line;
-    while (std::getline(file, line)) 
-    {
+    while (std::getline(file, line)) {
         std::istringstream iss(line);
         std::string token;
         iss >> token;
-        if (token == "v") //take in the float values of the xyz positions of each vertices
-        {
+        if (token == "v") {
             float x, y, z;
-            if (iss >> x >> y >> z) 
-            {
-                //printf("Vertex: %5.2f %5.2f %5.2f \n",x,y,z);
-                vertices.push_back(glm::vec3(x,y,z));
-            } 
-            else 
-            {
+            if (iss >> x >> y >> z) {
+                vertices.push_back(glm::vec3(x, y, z));
+            } else {
                 std::cerr << "Invalid vertex format in line: " << line << std::endl;
             }
-        }
-        else if (token == "f") //this line corresponds to a face line: tells you how to join the vertices
-        {
+        } else if (token == "f") {
             int a, b, c;
-            if (iss >> a >> b >> c) 
-            {
-                //std::cout << "Face: " << a << ", " << b << ", " << c << std::endl;
-                TrimeshFace tempTrimeshFace(a-1, b-1, c-1);
-                trimeshfaces.push_back(tempTrimeshFace);
-
-            } 
-            else 
-            {
+            if (iss >> a >> b >> c) {
+                TrimeshFace tempTrimeshFace(a - 1, b - 1, c - 1);
+                trimeshFaces.push_back(tempTrimeshFace);
+            } else {
                 std::cerr << "Invalid face format in line: " << line << std::endl;
             }
-        } 
-        else 
-        {
+        } else {
             std::cout << "Ignored line: " << line << std::endl;
         }
     }
-    //printf("\n\nDone with readTrimesh...\n");
-    file.close();
 
+    file.close();
 }
 
 void performReadQuad(const std::string& filename, vector<glm::vec3> &vertices, vector<QuadFace*> &quadfaces )

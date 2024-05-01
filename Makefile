@@ -10,4 +10,4 @@ smoothing: catmull.o loop.o
 	g++ -std=c++11 -w -g -c $<
 
 clean: 
-	rm -rf *.o *.out smoothing *.dSYM assets/*/*.out
+	rm -rf *.o *.out smoothing render *.dSYM assets/*/*.out
