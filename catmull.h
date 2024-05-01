@@ -9,7 +9,7 @@ using namespace std;
 
 struct catmullClark{
     public:
-
+        std::string opfile;
         vector<glm::vec3> quadVertices;
         vector<QuadFace*> quadFaces;
         vector<glm::vec3> quadNormals;
@@ -19,7 +19,9 @@ struct catmullClark{
         void computeFacePoints(vector<glm::vec3>&);
         void computeEdgePoints(vector<glm::vec3>&, unordered_map<string,glm::vec3>&);
         void computeVertexPoints(vector<glm::vec3>&, unordered_map<string,glm::vec3>&, vector<glm::vec3>&);
-        void doSubdivision();
+        void doSubdivision(std::string filename);
+        void printSubdividedMesh();
+        void displayScene();
 
 
     catmullClark(vector<glm::vec3> vertices, vector<QuadFace*> faces )

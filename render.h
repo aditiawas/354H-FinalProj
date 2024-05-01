@@ -27,8 +27,9 @@ class OpenGLWindow {
 public:
     std::vector<glm::vec3> vertices;
     std::vector<TrimeshFace*> faces;
+    std::vector<QuadFace*> quadFaces;
 
-    OpenGLWindow(int argc, char** argv, std::string filename) : vertices(vertices), faces(faces){
+    OpenGLWindow(int argc, char** argv, std::string filename, bool renderQuads) : vertices(vertices), faces(faces), quadFaces(quadFaces) {
         glutInit(&argc, argv); //ADITI: check
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
         glutInitWindowSize(kWindowWidth, kWindowHeight);
@@ -42,9 +43,18 @@ public:
         InitGL();
         std::vector<glm::vec3> vertices2;
         std::vector<TrimeshFace*> faces2;
-        readTrimesh(filename, vertices2, faces2);
-        this->vertices = vertices2;
-        this->faces = faces2;
+        std::vector<QuadFace*> quadfaces2;
+
+        if (renderQuads) {
+            readQuad(filename, vertices2, quadfaces2);
+            this->vertices = vertices2;
+            this->quadFaces = quadfaces2;
+        } else {
+            readTrimesh(filename, vertices2, faces2);
+            this->vertices = vertices2;
+            this->faces = faces2;
+        }
+
         DrawShape();
 
         glutDisplayFunc(DrawGLSceneWrapper); //ADITI: hacky way
@@ -105,6 +115,58 @@ public:
             }
         }
         //printf("\n\nDone with readTrimesh...\n");
+        file.close();
+
+    }
+
+    void readQuad(const std::string& filename, vector<glm::vec3> &vertices, vector<QuadFace*> &quadfaces )
+    {   
+        std::ifstream file(filename);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << filename << std::endl;
+            return;
+        }
+
+        std::string line;
+        while (std::getline(file, line)) 
+        {
+            std::istringstream iss(line);
+            std::string token;
+            iss >> token;
+            if (token == "v") 
+            {
+                float x, y, z;
+                if (iss >> x >> y >> z) 
+                {
+                    //printf("Vertex: %5.2f %5.2f %5.2f \n",x,y,z);
+                    vertices.push_back(glm::vec3(x,y,z));
+                } 
+                else 
+                {
+                    std::cerr << "Invalid vertex format in line: " << line << std::endl;
+                }
+            } 
+            else if (token == "f") 
+            {
+                int a, b, c, d;
+                if (iss >> a >> b >> c >>d) 
+                {
+                    //std::cout << "Face: " << a << ", " << b << ", " << c << ", " <<d << std::endl;
+                    QuadFace* tempQuadFace = new QuadFace(a-1,b-1,c-1,d-1);
+                    quadfaces.push_back(tempQuadFace);
+
+                } 
+                else 
+                {
+                    std::cerr << "Invalid face format in line: " << line << std::endl;
+                }
+            } 
+            else 
+            {
+                std::cerr << "Unknown token: " << token << " in line: " << line << std::endl;
+            }
+        }
+        printf("Done with readQuad...");
         file.close();
 
     }

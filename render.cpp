@@ -51,33 +51,72 @@ void OpenGLWindow::DrawShape() {
     glLineWidth(1.0f);
     glDisable(GL_CULL_FACE); // Disable face culling for the wireframe mesh //ADITI: done
 
-    glBegin(GL_LINES);
-    for (const TrimeshFace* face : faces) {
-        glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[0]]));
-        glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[1]]));
+    if (!quadFaces.empty()) {
+        glBegin(GL_LINES);
+        for (const QuadFace* face : quadFaces) {
+            int idx1 = face->v1;
+            int idx2 = face->v2;
+            int idx3 = face->v3;
+            int idx4 = face->v4;
 
-        glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[1]]));
-        glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[2]]));
+            glVertex3fv(glm::value_ptr(vertices[idx1]));
+            glVertex3fv(glm::value_ptr(vertices[idx2]));
 
-        glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[2]]));
-        glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[0]]));
+            glVertex3fv(glm::value_ptr(vertices[idx2]));
+            glVertex3fv(glm::value_ptr(vertices[idx3]));
+
+            glVertex3fv(glm::value_ptr(vertices[idx3]));
+            glVertex3fv(glm::value_ptr(vertices[idx4]));
+
+            glVertex3fv(glm::value_ptr(vertices[idx4]));
+            glVertex3fv(glm::value_ptr(vertices[idx1]));
+        }
+        glEnd();
+    } else {
+        glBegin(GL_LINES);
+        for (const TrimeshFace* face : faces) {
+            glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[0]]));
+            glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[1]]));
+
+            glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[1]]));
+            glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[2]]));
+
+            glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[2]]));
+            glVertex3fv(glm::value_ptr(vertices[face->vertexIndices[0]]));
+        }
+        glEnd();
     }
-    glEnd();
 
     glDisable(GL_LIGHTING); // Disable lighting
     glColor3f(0.1f, 0.5f, 1.0f); // Set a fixed color
 
-    glBegin(GL_TRIANGLES);
-    for (const TrimeshFace* face : faces) {
-        int idx1 = face->vertexIndices[0];
-        int idx2 = face->vertexIndices[1];
-        int idx3 = face->vertexIndices[2];
+    if (!quadFaces.empty()) {
+        glBegin(GL_QUADS);
+        for (const QuadFace* face : quadFaces) {
+            int idx1 = face->v1;
+            int idx2 = face->v2;
+            int idx3 = face->v3;
+            int idx4 = face->v4;
 
-        glVertex3fv(glm::value_ptr(vertices[idx1]));
-        glVertex3fv(glm::value_ptr(vertices[idx2]));
-        glVertex3fv(glm::value_ptr(vertices[idx3]));
+            glVertex3fv(glm::value_ptr(vertices[idx1]));
+            glVertex3fv(glm::value_ptr(vertices[idx2]));
+            glVertex3fv(glm::value_ptr(vertices[idx3]));
+            glVertex3fv(glm::value_ptr(vertices[idx4]));
+        }
+        glEnd();
+    } else {
+        glBegin(GL_TRIANGLES);
+        for (const TrimeshFace* face : faces) {
+            int idx1 = face->vertexIndices[0];
+            int idx2 = face->vertexIndices[1];
+            int idx3 = face->vertexIndices[2];
+
+            glVertex3fv(glm::value_ptr(vertices[idx1]));
+            glVertex3fv(glm::value_ptr(vertices[idx2]));
+            glVertex3fv(glm::value_ptr(vertices[idx3]));
+        }
+        glEnd();
     }
-    glEnd();
 
     glEnable(GL_LIGHTING); // Re-enable lighting
 
@@ -182,7 +221,14 @@ void OpenGLWindow::onClose() {
 
 int main(int argc, char** argv) {
 
-    OpenGLWindow window(argc, argv, argv[1]);
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " <filename> <renderQuads>" << std::endl;
+        return 1;
+    }
+
+    bool renderQuads = std::stoi(argv[2]) != 1;
+    OpenGLWindow window(argc, argv, argv[1], renderQuads);
+
     window.Run();
 
     return 0;

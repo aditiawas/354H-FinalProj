@@ -34,7 +34,8 @@ void aboutCallback(Fl_Widget* widget, void* data) {
 }
 
 //reading the trimesh face from a file
-void performReadTrimesh(const std::string& filename, vector<glm::vec3>& vertices, vector<TrimeshFace>& trimeshFaces) {
+void performReadTrimesh(const std::string& filename, vector<glm::vec3>& vertices, vector<TrimeshFace>& trimeshFaces,
+                        vector<int>& cv, vector<std::pair<int, int>>& ce) {
     std::ifstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Failed to open file: " << filename << std::endl;
@@ -60,6 +61,20 @@ void performReadTrimesh(const std::string& filename, vector<glm::vec3>& vertices
                 trimeshFaces.push_back(tempTrimeshFace);
             } else {
                 std::cerr << "Invalid face format in line: " << line << std::endl;
+            }
+        } else if (token == "cv") {
+            int vertexIndex;
+            if (iss >> vertexIndex) {
+                cv.push_back(vertexIndex - 1);
+            } else {
+                std::cerr << "Invalid crease vertex format in line: " << line << std::endl;
+            }
+        } else if (token == "ce") {
+            int vertexIndex1, vertexIndex2;
+            if (iss >> vertexIndex1 >> vertexIndex2) {
+                ce.push_back(std::make_pair(vertexIndex1 - 1, vertexIndex2 - 1));
+            } else {
+                std::cerr << "Invalid crease edge format in line: " << line << std::endl;
             }
         } else {
             std::cout << "Ignored line: " << line << std::endl;
@@ -128,20 +143,23 @@ std::string performOperation(const std::string& filename, int option, int slider
      string temp = "Option selected was: " + option_str + "\nFilename: " + filename + "\nSlider Value: " + std::to_string(sliderValue) + "\n";
 
      vector<glm::vec3> vertices;
+     vector<int> cv;
+     vector<std::pair<int, int> > ce;
+
      if (option==0) //catmull-clark
      {  
         option_str = "Catmull-Clark Algorithm";
         vector <QuadFace*> quadfaces;
         performReadQuad(filename, vertices, quadfaces);
         catmullClark catmullObject = catmullClark(vertices,quadfaces);
-        catmullObject.doSubdivision();
+        catmullObject.doSubdivision(filename);
      }
      else if(option==1) //loop subdivision
      {
         option_str = "Loop Subdivision Algorithm";
         vector<TrimeshFace> trimeshfaces;
-        performReadTrimesh(filename, vertices, trimeshfaces);
-        LoopSubdiv loopObject = LoopSubdiv(vertices, trimeshfaces);
+        performReadTrimesh(filename, vertices, trimeshfaces, cv, ce);
+        LoopSubdiv loopObject = LoopSubdiv(vertices, trimeshfaces, cv, ce);
         string log = loopObject.doSubdivision(filename, sliderValue);
         temp += log;
      }

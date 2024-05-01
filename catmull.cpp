@@ -1,7 +1,10 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string>
+#include<fstream>
+#include<sstream>
 #include "catmull.h"
+#include <iostream>
 using namespace std;
 
 void catmullClark::initializeEdges()
@@ -194,8 +197,10 @@ void catmullClark::computeVertexPoints(vector<glm::vec3> & facePoints, unordered
 
 }
 
-void catmullClark::doSubdivision()
+void catmullClark::doSubdivision(std::string filename)
 {   
+    opfile = filename + ".out";
+    //opfile = filename + "_op" + std::to_string(iter) + ".out";
     initializeEdges();
     //edges computed, faces touching each vertex counted
 
@@ -463,4 +468,53 @@ void catmullClark::doSubdivision()
     printf("\n After subdivision Size of quadFaces %d \n", int(quadFaces.size()));
     printf("\n After subdivision Size of quadNormals %d \n", int(quadNormals.size()));
 
+    printSubdividedMesh();
+    displayScene();
+
+}
+
+void catmullClark::printSubdividedMesh() {
+    // Open the output file
+    //printf("Output file: %s", opfile.c_str());
+
+    const std::string output_file = opfile;
+    std::ofstream outputFile(output_file);
+    if (!outputFile.is_open()) {
+        printf("Failed to open output file \n");
+        return;
+    }
+
+    vector<glm::vec3> v = quadVertices;
+    vector<QuadFace*> f = quadFaces;
+    // Print vertices to console and file
+    for (const glm::vec3& vertex : v) {
+        //std::cout << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+        outputFile << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+    }
+
+    // Print trimesh faces to console and file
+    for (const QuadFace* face : f) {
+        //std::cout << "f " << face.vertexIndices[0] + 1 << " " << face.vertexIndices[1] + 1 << " " << face.vertexIndices[2] + 1 << "\n";
+        outputFile << "f " << face->v1 + 1 << " " << face->v2 + 1 << " " << face->v3 + 1 << " " << face->v4 + 1 << "\n";
+    }
+
+    // Close the output file
+    outputFile.close();
+}
+
+void catmullClark::displayScene() {
+    // Path to the executable
+    std::string executable = "./render";
+
+    // Arguments to pass to the executable
+    std::string arg1 = opfile;
+
+    // Construct the command string with arguments
+    std::string command = executable + " " + arg1 + " 0";
+
+    int result = system(command.c_str());
+
+    // Check the return value
+    if (result != 0)
+        std::cout << "\nFailed to run the executable." << std::endl;
 }
