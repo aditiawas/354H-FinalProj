@@ -4,7 +4,7 @@ CS 354H Computer Graphics Final Project --> https://www.cs.utexas.edu/~graphics/
 [ Y ] Implement Catmull-Clark.\
 [ Y ] Implement Loop subdivision.\
 [ ] Add extensions to handle extraordinary vertices and sharp creases.\
-[ ] Build a tool that shows the limit surface
+[ ] Build a tool that shows the limit surface.\
 [ Y ] Add functionality to view intermediate subdivision levels.
 
 To compile, use the following commands:
