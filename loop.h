@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 #include "subdivobjects.h"
-#include "render.h" // Retained
+#include "render.h"
 
 using namespace std;
 
@@ -28,13 +28,6 @@ struct VertexHash {
         seed ^= std::hash<double>()(v.y) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         seed ^= std::hash<double>()(v.z) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         return seed;
-    }
-};
-
-struct PairHash {
-    template <class T1, class T2>
-    std::size_t operator()(const std::pair<T1, T2>& pair) const {
-        return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
     }
 };
 
