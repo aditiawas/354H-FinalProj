@@ -48,7 +48,7 @@ void OpenGLWindow::DrawShape() {
     //glEnable(GL_CULL_FACE);
 
     glColor3f(0.0f, 0.0f, 0.0f);
-    glLineWidth(2.0f);
+    glLineWidth(1.0f);
     glDisable(GL_CULL_FACE); // Disable face culling for the wireframe mesh //ADITI: done
 
     glBegin(GL_LINES);
