@@ -261,7 +261,7 @@ void LoopSubdiv::displayScene() {
     std::string arg1 = opfile;
 
     // Construct the command string with arguments
-    std::string command = executable + " " + arg1;
+    std::string command = executable + " " + arg1 + " 1";
 
     int result = system(command.c_str());
 
