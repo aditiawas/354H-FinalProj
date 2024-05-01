@@ -1,6 +1,8 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string>
+#include<fstream>
+#include<sstream>
 #include "catmull.h"
 using namespace std;
 
@@ -463,4 +465,34 @@ void catmullClark::doSubdivision()
     printf("\n After subdivision Size of quadFaces %d \n", int(quadFaces.size()));
     printf("\n After subdivision Size of quadNormals %d \n", int(quadNormals.size()));
 
+}
+
+
+void catmullClark::printSubdividedMesh() {
+    // Open the output file
+    //printf("Output file: %s", opfile.c_str());
+
+    const std::string output_file = opfile.c_str();
+    std::ofstream outputFile(output_file);
+    if (!outputFile.is_open()) {
+        printf("Failed to open output file \n");
+        return;
+    }
+
+    vector<glm::vec3> v = quadVertices;
+    vector<QuadFace*> f = quadFaces;
+    // Print vertices to console and file
+    for (const glm::vec3& vertex : v) {
+        //std::cout << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+        outputFile << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+    }
+
+    // Print trimesh faces to console and file
+    for (const QuadFace* face : f) {
+        //std::cout << "f " << face.vertexIndices[0] + 1 << " " << face.vertexIndices[1] + 1 << " " << face.vertexIndices[2] + 1 << "\n";
+        outputFile << "f " << face->v1 + 1 << " " << face->v2 + 1 << " " << face->v3 + 1 << " " << face->v4 + 1 << "\n";
+    }
+
+    // Close the output file
+    outputFile.close();
 }
