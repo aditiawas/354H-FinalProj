@@ -15,13 +15,11 @@ struct catmullClark{
         vector<glm::vec3> quadNormals;
         vector<int> countFacesAdjacent;
         unordered_map<string,int> edgesToFaces; //edge mapped to each face it is a part of
-        std::string opfile;
         void initializeEdges();
         void computeFacePoints(vector<glm::vec3>&);
         void computeEdgePoints(vector<glm::vec3>&, unordered_map<string,glm::vec3>&);
         void computeVertexPoints(vector<glm::vec3>&, unordered_map<string,glm::vec3>&, vector<glm::vec3>&);
         void doSubdivision();
-        void printSubdividedMesh();
 
 
     catmullClark(vector<glm::vec3> vertices, vector<QuadFace*> faces )
