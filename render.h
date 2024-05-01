@@ -1,9 +1,16 @@
 #ifndef RENDER_H
 #define RENDER_H
 
+#ifdef __APPLE__
 #include <OpenGL/glu.h>
 #include <GLUT/glut.h>
 #include <OpenGL/gl.h>
+#else
+#include <GL/glu.h>
+#include <GL/glut.h>
+#include <GL/gl.h>
+#endif
+
 #include <vector>
 #include <cmath>
 #include <glm/glm.hpp>
