@@ -319,7 +319,7 @@ void displayScene(std::string arg1, int option) {
 
 void showLimit(Fl_Widget* widget, void* data) {
     // Get the selected file and option
-    /*const char* filename = window->label();
+    const char* filename = window->label();
     std::string opfile = filename;
     int option = dropdown->value();
 
@@ -328,7 +328,10 @@ void showLimit(Fl_Widget* widget, void* data) {
     } else {
         opfile = opfile + "_limit.txt";
         displayScene(opfile, option);
-    }*/
+    }
+
+    //UNCOMMENT THE FOLLOWING IF YOU WANT TO MANUALLY RECOMPUTE LIMIT SURFACES
+    /*
     const char* filename = window->label();
     int option = dropdown->value();
     int sliderValue = static_cast<int>(slider->value());
@@ -339,7 +342,7 @@ void showLimit(Fl_Widget* widget, void* data) {
         std::string result = performOperation(filename, option, sliderValue, 1);
         resultDisplay->buffer(new Fl_Text_Buffer());
         resultDisplay->buffer()->text(result.c_str());
-    }
+    }*/
 }
 
 

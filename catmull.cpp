@@ -291,14 +291,14 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
     //edge points computed 
 
     vector<glm::vec3> vertexPoints;
-    vertexPoints.resize(quadVertices.size());
+    //vertexPoints.resize(quadVertices.size());
     computeVertexPoints(facePoints,edgePoints,vertexPoints);
     //vertex points computed
 
-    vector<glm::vec3> newQuadVertices;
-    vector<QuadFace*> newQuadFaces;
-    vector<glm::vec3> newQuadNormals;
-    vector<int> newVertexSharpness;
+    vector<glm::vec3> newQuadVertices = vector<glm::vec3>(0);
+    vector<QuadFace*> newQuadFaces = vector <QuadFace*>(0);
+    vector<glm::vec3> newQuadNormals = vector<glm::vec3>(0);
+    vector<int> newVertexSharpness = vector<int>(0);
 
     int new_number_of_vertices = 0;
     unordered_map<string, int> edgesToNewVertexIndices; //check if any of our edge points have been already included in the new set of vertices
