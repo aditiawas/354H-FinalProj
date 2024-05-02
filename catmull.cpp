@@ -197,10 +197,10 @@ void catmullClark::computeVertexPoints(vector<glm::vec3> & facePoints, unordered
 
 }
 
-void catmullClark::doSubdivision(std::string filename)
+std::pair<vector<glm::vec3>, std::vector<QuadFace*>> catmullClark::doSubdivision()
 {   
-    opfile = filename + ".out";
     //opfile = filename + "_op" + std::to_string(iter) + ".out";
+
     initializeEdges();
     //edges computed, faces touching each vertex counted
 
@@ -462,18 +462,18 @@ void catmullClark::doSubdivision(std::string filename)
     this->quadNormals = newQuadNormals;
     this->quadVertices = newQuadVertices;
 
-    printf("\n After subdivision \n");
+    //printf("\n After subdivision \n");
     
-    printf("\n After subdivision Size of quadVertices %d \n", int(quadVertices.size()));
-    printf("\n After subdivision Size of quadFaces %d \n", int(quadFaces.size()));
-    printf("\n After subdivision Size of quadNormals %d \n", int(quadNormals.size()));
+    //printf("\n After subdivision Size of quadVertices %d \n", int(quadVertices.size()));
+    //printf("\n After subdivision Size of quadFaces %d \n", int(quadFaces.size()));
+    //printf("\n After subdivision Size of quadNormals %d \n", int(quadNormals.size()));
+    return std::make_pair(newQuadVertices, newQuadFaces);
 
-    printSubdividedMesh();
-    displayScene();
+    // displayScene();
 
 }
 
-void catmullClark::printSubdividedMesh() {
+void catmullClark::printSubdividedMesh(vector<glm::vec3> v, vector<QuadFace*> f) {
     // Open the output file
     //printf("Output file: %s", opfile.c_str());
 
@@ -484,8 +484,6 @@ void catmullClark::printSubdividedMesh() {
         return;
     }
 
-    vector<glm::vec3> v = quadVertices;
-    vector<QuadFace*> f = quadFaces;
     // Print vertices to console and file
     for (const glm::vec3& vertex : v) {
         //std::cout << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
@@ -517,4 +515,36 @@ void catmullClark::displayScene() {
     // Check the return value
     if (result != 0)
         std::cout << "\nFailed to run the executable." << std::endl;
+}
+
+string catmullClark::doSubdivisionIteratively(int iter, std::string filename)
+{
+
+    opfile = filename;
+    std::stringstream ss;
+
+    if (iter > 0)
+    {
+        opfile = filename + "_op" + std::to_string(iter) + ".out";
+        printf("\nPerforming CatmullClark Subdivision\n");
+        ss << "\nOriginal Mesh Info:\n" << quadVertices.size() << " vertices, " << quadFaces.size() << " faces\n";
+        vector<glm::vec3> oldQuadVertices = this->quadVertices;
+        vector<QuadFace*> oldQuadFaces = this->quadFaces;
+        vector<glm::vec3> oldQuadNormals = this->quadNormals;
+        for(int i=0; i<iter;i++)
+        {
+            doSubdivision();
+        }
+        ss << "\nSubdivided Mesh Info:\n" << quadVertices.size() << " vertices, " << quadFaces.size() << " faces\n";
+
+        //printf("\nAfter subdivision \n");
+        printSubdividedMesh(quadVertices, quadFaces);
+        //restoring the original mesh
+        this->quadVertices = oldQuadVertices;
+        this->quadFaces = oldQuadFaces;
+        this->quadNormals = oldQuadNormals;
+    }
+    string log = ss.str();
+    displayScene();
+    return log;
 }
