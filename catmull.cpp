@@ -10,7 +10,10 @@ using namespace std;
 void catmullClark::initializeEdges()
 {
     countFacesAdjacent.clear();
+    countSharpEdgesAdjacent.clear();
+    verticesToSharpEdgeVertices.clear();
     countFacesAdjacent = vector<int>(quadVertices.size(),0); //for each vertex, we set the number of faces its adjacent to to 0
+    countSharpEdgesAdjacent = vector<int>(quadVertices.size(),0);
     edgesToFaces.clear();
 
 
@@ -27,6 +30,35 @@ void catmullClark::initializeEdges()
         countFacesAdjacent[b_idx] +=1;
         countFacesAdjacent[c_idx] +=1;
         countFacesAdjacent[d_idx] +=1;
+
+        if(vertex_sharpness[a_idx]==1 && vertex_sharpness[b_idx]==1)
+        {
+            countSharpEdgesAdjacent[a_idx]+=1;
+            countSharpEdgesAdjacent[b_idx]+=1;
+            verticesToSharpEdgeVertices[a_idx].push_back(b_idx);
+            verticesToSharpEdgeVertices[b_idx].push_back(a_idx);
+        }
+        if(vertex_sharpness[b_idx]==1 && vertex_sharpness[c_idx]==1)
+        {
+            countSharpEdgesAdjacent[b_idx]+=1;
+            countSharpEdgesAdjacent[c_idx]+=1;
+            verticesToSharpEdgeVertices[b_idx].push_back(c_idx);
+            verticesToSharpEdgeVertices[c_idx].push_back(b_idx);
+        }
+        if(vertex_sharpness[c_idx]==1 && vertex_sharpness[d_idx]==1)
+        {
+            countSharpEdgesAdjacent[c_idx]+=1;
+            countSharpEdgesAdjacent[d_idx]+=1;
+            verticesToSharpEdgeVertices[c_idx].push_back(d_idx);
+            verticesToSharpEdgeVertices[d_idx].push_back(c_idx);
+        }
+        if(vertex_sharpness[a_idx]==1 && vertex_sharpness[d_idx]==1)
+        {
+            countSharpEdgesAdjacent[a_idx]+=1;
+            countSharpEdgesAdjacent[d_idx]+=1;
+            verticesToSharpEdgeVertices[a_idx].push_back(d_idx);
+            verticesToSharpEdgeVertices[d_idx].push_back(a_idx);
+        }
 
         //for each pair of vertices, form an edge
         //TOCHECK asmita: do I need to form directed or undirected edges??
@@ -94,6 +126,10 @@ void catmullClark::computeEdgePoints(vector<glm::vec3> & facePoints, unordered_m
         glm::vec3 facepoints_ab = facePoints[i] + facePoints[face_adjacent_to_ab_idx];
         glm::vec3 edge_endpoints_ab = quadVertices[a_idx] + quadVertices[b_idx];
         glm::vec3 edgepoints_ab = 0.25f*(facepoints_ab + edge_endpoints_ab);
+        if(vertex_sharpness[a_idx]==1 && vertex_sharpness[b_idx]==1) //sharp edge
+        {
+            edgepoints_ab = 0.5f*(edge_endpoints_ab); //take average of the edge endpoints instead
+        }
         //found the edgepoints
         //storing it in both edge_ab and edge_ba for now 
 
@@ -107,6 +143,10 @@ void catmullClark::computeEdgePoints(vector<glm::vec3> & facePoints, unordered_m
         glm::vec3 facepoints_bc = facePoints[i] + facePoints[face_adjacent_to_bc_idx];
         glm::vec3 edge_endpoints_bc = quadVertices[c_idx] + quadVertices[b_idx];
         glm::vec3 edgepoints_bc = 0.25f*(facepoints_bc + edge_endpoints_bc);
+        if(vertex_sharpness[c_idx]==1 && vertex_sharpness[b_idx]==1) //sharp edge
+        {
+            edgepoints_bc = 0.5f*(edge_endpoints_bc); //take average of the edge endpoints instead
+        }
         //found the edgepoints
         //storing it in both edge_ab and edge_ba for now 
 
@@ -120,6 +160,10 @@ void catmullClark::computeEdgePoints(vector<glm::vec3> & facePoints, unordered_m
         glm::vec3 facepoints_cd = facePoints[i] + facePoints[face_adjacent_to_cd_idx];
         glm::vec3 edge_endpoints_cd = quadVertices[c_idx] + quadVertices[d_idx];
         glm::vec3 edgepoints_cd = 0.25f*(facepoints_cd + edge_endpoints_cd);
+        if(vertex_sharpness[c_idx]==1 && vertex_sharpness[d_idx]==1) //sharp edge
+        {
+            edgepoints_cd = 0.5f*(edge_endpoints_cd); //take average of the edge endpoints instead
+        }
         //found the edgepoints
         //storing it in both edge_ab and edge_ba for now 
 
@@ -133,6 +177,10 @@ void catmullClark::computeEdgePoints(vector<glm::vec3> & facePoints, unordered_m
         glm::vec3 facepoints_da = facePoints[i] + facePoints[face_adjacent_to_da_idx];
         glm::vec3 edge_endpoints_da = quadVertices[a_idx] + quadVertices[d_idx];
         glm::vec3 edgepoints_da = 0.25f*(facepoints_da + edge_endpoints_da);
+        if(vertex_sharpness[a_idx]==1 && vertex_sharpness[d_idx]==1) //sharp edge
+        {
+            edgepoints_da = 0.5f*(edge_endpoints_da); //take average of the edge endpoints instead
+        }
         //found the edgepoints
         //storing it in both edge_ab and edge_ba for now 
 
@@ -157,45 +205,72 @@ void catmullClark::computeVertexPoints(vector<glm::vec3> & facePoints, unordered
         float c_divisor = countFacesAdjacent[c_idx];
         float d_divisor = countFacesAdjacent[d_idx];
 
-        vertexPoints[a_idx] += (1.0f*facePoints[i])/(a_divisor); //add the contribution of this face to the vertex a
-         //F on wikipedia page is the average of all facepoints
-        //so while adding each face contribution, divide by total n (where n is the total number of faces touching a)
+        if(countSharpEdgesAdjacent[a_idx]<2)
+        {
+            vertexPoints[a_idx] += (1.0f*facePoints[i])/(a_divisor); //add the contribution of this face to the vertex a
+            //F on wikipedia page is the average of all facepoints
+            //so while adding each face contribution, divide by total n (where n is the total number of faces touching a)
+            vertexPoints[a_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[b_idx]))/(a_divisor); //average of this edge
+            vertexPoints[a_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[d_idx]))/(a_divisor); //avergae of this edge 
+            //since we have to add 2R to the sum 
+            //we can just blindly add each edge to the sum 
+            //it will be counted twice for each face 
+        }
 
-        vertexPoints[b_idx] += (1.0f*facePoints[i])/(b_divisor); //add the contribution of this face to the vertex b
+        if(countSharpEdgesAdjacent[b_idx]<2)
+        {
+            vertexPoints[b_idx] += (1.0f*facePoints[i])/(b_divisor); //add the contribution of this face to the vertex b
+            vertexPoints[b_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[b_idx]))/(b_divisor); 
+            vertexPoints[b_idx] += (0.5f*(quadVertices[b_idx] + quadVertices[c_idx]))/(b_divisor); 
+        }
         
-
-        vertexPoints[c_idx] += (1.0f*facePoints[i])/(c_divisor); //add the contribution of this face to the vertex c
+        if(countSharpEdgesAdjacent[c_idx]<2)
+        {
+            vertexPoints[c_idx] += (1.0f*facePoints[i])/(c_divisor); //add the contribution of this face to the vertex c
+            vertexPoints[c_idx] += (0.5f*(quadVertices[c_idx] + quadVertices[b_idx]))/(c_divisor); 
+            vertexPoints[c_idx] += (0.5f*(quadVertices[c_idx] + quadVertices[d_idx]))/(c_divisor); 
+        }
         
-
-        vertexPoints[d_idx] += (1.0f*facePoints[i])/(d_divisor); //add the contribution of this face to the vertex d
+        if(countSharpEdgesAdjacent[d_idx]<2)
+        {
+            vertexPoints[d_idx] += (1.0f*facePoints[i])/(d_divisor); //add the contribution of this face to the vertex d
+            vertexPoints[d_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[d_idx]))/(d_divisor); 
+            vertexPoints[d_idx] += (0.5f*(quadVertices[c_idx] + quadVertices[d_idx]))/(d_divisor); 
+        }
 
         //done adding F
-
-        vertexPoints[a_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[b_idx]))/(a_divisor); //average of this edge
-        vertexPoints[a_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[d_idx]))/(a_divisor); //avergae of this edge 
-        //since we have to add 2R to the sum 
-        //we can just blindly add each edge to the sum 
-        //it will be counted twice for each face 
-        
-
-        vertexPoints[b_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[b_idx]))/(b_divisor); 
-        vertexPoints[b_idx] += (0.5f*(quadVertices[b_idx] + quadVertices[c_idx]))/(b_divisor); 
-
-
-        vertexPoints[c_idx] += (0.5f*(quadVertices[c_idx] + quadVertices[b_idx]))/(c_divisor); 
-        vertexPoints[c_idx] += (0.5f*(quadVertices[c_idx] + quadVertices[d_idx]))/(c_divisor); 
-
-
-        vertexPoints[d_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[d_idx]))/(d_divisor); 
-        vertexPoints[d_idx] += (0.5f*(quadVertices[c_idx] + quadVertices[d_idx]))/(d_divisor); 
         //done adding 2R
     }
     for(int i =0; i < quadVertices.size(); i++)
     {
         //vertexPoints now has F+2R
-        float n = 1.0f*(countFacesAdjacent[i]);
+        if(vertex_sharpness[i]==1) //sharp vertex: retain!
+        {
+            vertexPoints[i]=quadVertices[i]; //retain the same position
+        }
+        else if(countSharpEdgesAdjacent[i]<2) //less than 2 incident edges
+        {
+            float n = 1.0f*(countFacesAdjacent[i]);
         //TODO asmita possible bug: int to float..
-        vertexPoints[i] = (vertexPoints[i] + (n-3)*quadVertices[i])/ (n);
+            vertexPoints[i] = (vertexPoints[i] + (n-3)*quadVertices[i])/ (n);
+        }
+        else if(countSharpEdgesAdjacent[i]==2)
+        {
+            if(verticesToSharpEdgeVertices[i].size()<2)
+            {
+                printf("Error: 2 sharp edges but no endpoints!");
+            }
+            else
+            {
+                int endpoint1= verticesToSharpEdgeVertices[i][0];
+                int endpoint2= verticesToSharpEdgeVertices[i][1];
+                vertexPoints[i] = 0.75f*quadVertices[i] + 0.125f*quadVertices[endpoint1] + 0.125f*quadVertices[endpoint2];
+            }
+        }
+        else if(countSharpEdgesAdjacent[i]>2)
+        {
+            vertexPoints[i]=quadVertices[i]; //retain the same position
+        }   
     }
 
 }
@@ -223,6 +298,7 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
     vector<glm::vec3> newQuadVertices;
     vector<QuadFace*> newQuadFaces;
     vector<glm::vec3> newQuadNormals;
+    vector<int> newVertexSharpness;
 
     int new_number_of_vertices = 0;
     unordered_map<string, int> edgesToNewVertexIndices; //check if any of our edge points have been already included in the new set of vertices
@@ -231,6 +307,7 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
     {
 
         newQuadVertices.push_back(facePoints[i]); //add this face point to the new vertices 
+        newVertexSharpness.push_back(0); //face point is never sharp right?
         int face_point_idx = new_number_of_vertices; //the face point index in the new vertex list is equal to the number of vertices made so far
         new_number_of_vertices +=1;
 
@@ -269,6 +346,14 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
             new_number_of_vertices +=1;
             edgesToNewVertexIndices[edge_ba] = edge_point_for_ab_idx;
             newQuadVertices.push_back(edgePoints[edge_ba]); //always has to exist unless something is wrong with my previous logic
+            if(vertex_sharpness[a_idx]==1 && vertex_sharpness[b_idx]==1) //sharp edge: the resulting edge point has to be sharp
+            {
+                newVertexSharpness.push_back(1);
+            }
+            else
+            {
+                newVertexSharpness.push_back(0);
+            }
         }
 
         //ab done, now onto bc
@@ -289,6 +374,14 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
             new_number_of_vertices +=1;
             edgesToNewVertexIndices[edge_cb] = edge_point_for_bc_idx;
             newQuadVertices.push_back(edgePoints[edge_cb]); //always has to exist unless something is wrong with my previous logic
+            if(vertex_sharpness[c_idx]==1 && vertex_sharpness[b_idx]==1) //sharp edge: the resulting edge point has to be sharp
+            {
+                newVertexSharpness.push_back(1);
+            }
+            else
+            {
+                newVertexSharpness.push_back(0);
+            }
         }
         //bc done
 
@@ -308,6 +401,14 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
             new_number_of_vertices +=1;
             edgesToNewVertexIndices[edge_dc] = edge_point_for_cd_idx;
             newQuadVertices.push_back(edgePoints[edge_dc]); //always has to exist unless something is wrong with my previous logic
+            if(vertex_sharpness[c_idx]==1 && vertex_sharpness[d_idx]==1) //sharp edge: the resulting edge point has to be sharp
+            {
+                newVertexSharpness.push_back(1);
+            }
+            else
+            {
+                newVertexSharpness.push_back(0);
+            }
         }
         //cd done 
 
@@ -327,6 +428,14 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
             new_number_of_vertices +=1;
             edgesToNewVertexIndices[edge_ad] = edge_point_for_da_idx;
             newQuadVertices.push_back(edgePoints[edge_ad]); //always has to exist unless something is wrong with my previous logic
+            if(vertex_sharpness[c_idx]==1 && vertex_sharpness[d_idx]==1) //sharp edge: the resulting edge point has to be sharp
+            {
+                newVertexSharpness.push_back(1);
+            }
+            else
+            {
+                newVertexSharpness.push_back(0);
+            }
         }
         //da done
 
@@ -345,6 +454,14 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
             new_number_of_vertices +=1;
             pointsToNewVertexIndices[a_idx] = vertex_point_for_a_idx;
             newQuadVertices.push_back(vertexPoints[a_idx]); 
+            if(vertex_sharpness[a_idx]==1||countSharpEdgesAdjacent[a_idx]>2)
+            {
+                newVertexSharpness.push_back(1); //sharp vertex
+            }
+            else
+            {
+                newVertexSharpness.push_back(0);
+            }
         }
 
         //a done, onto b
@@ -361,6 +478,14 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
             new_number_of_vertices +=1;
             pointsToNewVertexIndices[b_idx] = vertex_point_for_b_idx;
             newQuadVertices.push_back(vertexPoints[b_idx]); 
+            if(vertex_sharpness[b_idx]==1||countSharpEdgesAdjacent[b_idx]>2)
+            {
+                newVertexSharpness.push_back(1); //sharp vertex
+            }
+            else
+            {
+                newVertexSharpness.push_back(0);
+            }
         }
         //b done
 
@@ -376,6 +501,14 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
             new_number_of_vertices +=1;
             pointsToNewVertexIndices[c_idx] = vertex_point_for_c_idx;
             newQuadVertices.push_back(vertexPoints[c_idx]); 
+            if(vertex_sharpness[c_idx]==1||countSharpEdgesAdjacent[c_idx]>2)
+            {
+                newVertexSharpness.push_back(1); //sharp vertex
+            }
+            else
+            {
+                newVertexSharpness.push_back(0);
+            }
         }
         //c done
 
@@ -391,6 +524,14 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
             new_number_of_vertices +=1;
             pointsToNewVertexIndices[d_idx] = vertex_point_for_d_idx;
             newQuadVertices.push_back(vertexPoints[d_idx]); 
+            if(vertex_sharpness[d_idx]==1||countSharpEdgesAdjacent[d_idx]>2)
+            {
+                newVertexSharpness.push_back(1); //sharp vertex
+            }
+            else
+            {
+                newVertexSharpness.push_back(0);
+            }
         }
 
         //we have pushed all the new points
@@ -464,9 +605,12 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
     this->quadFaces = newQuadFaces;
     this->quadNormals = newQuadNormals;
     this->quadVertices = newQuadVertices;
+    this->vertex_sharpness=newVertexSharpness;
 
     countFacesAdjacent.clear();
+    countSharpEdgesAdjacent.clear();
     edgesToFaces.clear();
+    verticesToSharpEdgeVertices.clear();
 
     //printf("\n After subdivision \n");
     
@@ -537,6 +681,7 @@ string catmullClark::doSubdivisionIteratively(int iter, std::string filename)
         vector<glm::vec3> oldQuadVertices = this->quadVertices;
         vector<QuadFace*> oldQuadFaces = this->quadFaces;
         vector<glm::vec3> oldQuadNormals = this->quadNormals;
+        vector<int> oldVertexSharpness = this->vertex_sharpness;
         for(int i=0; i<iter;i++)
         {
             doSubdivision();
@@ -549,6 +694,7 @@ string catmullClark::doSubdivisionIteratively(int iter, std::string filename)
         this->quadVertices = oldQuadVertices;
         this->quadFaces = oldQuadFaces;
         this->quadNormals = oldQuadNormals;
+        this->vertex_sharpness=oldVertexSharpness;
     }
     string log = ss.str();
     displayScene();
