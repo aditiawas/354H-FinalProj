@@ -193,13 +193,22 @@ void performReadQuadSharp(const std::string& filename, vector<glm::vec3> &vertic
 }
 
 // Function to perform the operation on the selected file
-std::string performOperation(const std::string& filename, int option, int sliderValue) {
+std::string performOperation(const std::string& filename, int option, int sliderValue, bool limitSurface) {
 
      string option_str;
      if (option==0) //catmull-clark
+     {
         option_str = "Catmull-Clark Algorithm";
-     else //loop subdivision
+     }
+     else if(option==1)//loop subdivision
+     {
         option_str = "Loop Subdivision Algorithm";
+     }
+     else if(option==2)
+     {
+        option_str = "Catmull-Clark Algorithm with Sharp vertices";
+     }
+    
      string temp = "Option selected was: " + option_str + "\nFilename: " + filename + "\nSlider Value: " + std::to_string(sliderValue) + "\n";
 
      vector<glm::vec3> vertices;
@@ -209,16 +218,32 @@ std::string performOperation(const std::string& filename, int option, int slider
         vector <QuadFace*> quadfaces;
         performReadQuad(filename, vertices, quadfaces);
         catmullClark catmullObject = catmullClark(vertices,quadfaces);
-        string log = catmullObject.doSubdivisionIteratively(sliderValue, filename);
-        temp+=log;
+        if(limitSurface==1)
+        {
+            string log = catmullObject.doSubdivisionIteratively(6, filename);
+            temp+=log;
+        }
+        else
+        {
+            string log = catmullObject.doSubdivisionIteratively(sliderValue, filename);
+            temp+=log;
+        }
      }
      else if(option==1) //loop subdivision
      {
         vector<TrimeshFace> trimeshfaces;
         performReadTrimesh(filename, vertices, trimeshfaces);
         LoopSubdiv loopObject = LoopSubdiv(vertices, trimeshfaces);
-        string log = loopObject.doSubdivision(filename, sliderValue);
-        temp += log;
+        if(limitSurface==1)
+        {
+            string log = loopObject.doSubdivision(filename, 6);
+            temp += log;
+        }
+        else
+        {
+            string log = loopObject.doSubdivision(filename, sliderValue);
+            temp += log;
+        }
      }
      else if(option==2) //sharp catmull-clark
      {
@@ -226,12 +251,16 @@ std::string performOperation(const std::string& filename, int option, int slider
         vector<int> sharpness;
         performReadQuadSharp(filename, vertices, quadfaces, sharpness);
         catmullClark catmullObject = catmullClark(vertices,quadfaces,sharpness);
-        for(int i =0; i<vertices.size();i++)
+        if(limitSurface==1)
         {
-            printf("\n vertex sharpness of %d is %d \n", i, sharpness[i]);
+            string log = catmullObject.doSubdivisionIteratively(6, filename);
+            temp+=log;
         }
-        string log = catmullObject.doSubdivisionIteratively(sliderValue, filename);
-        temp+=log;
+        else
+        {
+            string log = catmullObject.doSubdivisionIteratively(sliderValue, filename);
+            temp+=log;
+        }
      }
      else
      {
@@ -268,7 +297,7 @@ void processButtonCallback(Fl_Widget* widget, void* data) {
     if (strlen(filename) == 0) {
         fl_alert("Please select a file first.");
     } else {
-        std::string result = performOperation(filename, option, sliderValue);
+        std::string result = performOperation(filename, option, sliderValue, 0);
         resultDisplay->buffer(new Fl_Text_Buffer());
         resultDisplay->buffer()->text(result.c_str());
     }
@@ -290,7 +319,7 @@ void displayScene(std::string arg1, int option) {
 
 void showLimit(Fl_Widget* widget, void* data) {
     // Get the selected file and option
-    const char* filename = window->label();
+    /*const char* filename = window->label();
     std::string opfile = filename;
     int option = dropdown->value();
 
@@ -299,6 +328,17 @@ void showLimit(Fl_Widget* widget, void* data) {
     } else {
         opfile = opfile + "_limit.txt";
         displayScene(opfile, option);
+    }*/
+    const char* filename = window->label();
+    int option = dropdown->value();
+    int sliderValue = static_cast<int>(slider->value());
+
+    if (strlen(filename) == 0) {
+        fl_alert("Please select a file first.");
+    } else {
+        std::string result = performOperation(filename, option, sliderValue, 1);
+        resultDisplay->buffer(new Fl_Text_Buffer());
+        resultDisplay->buffer()->text(result.c_str());
     }
 }
 
