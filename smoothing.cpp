@@ -191,17 +191,31 @@ void processButtonCallback(Fl_Widget* widget, void* data) {
     }
 }
 
+void displayScene(std::string arg1, int option) {
+    // Path to the executable
+    std::string executable = "./render";
+
+    // Construct the command string with arguments
+    std::string command = executable + " " + arg1 + " 1";
+
+    int result = system(command.c_str());
+
+    // Check the return value
+    if (result != 0)
+        std::cout << "\nFailed to run the executable." << std::endl;
+}
+
 void showLimit(Fl_Widget* widget, void* data) {
     // Get the selected file and option
     const char* filename = window->label();
+    std::string opfile = filename;
+    int option = dropdown->value();
 
     if (strlen(filename) == 0) {
         fl_alert("Please select a file first.");
     } else {
-        //string opfile = filename + "_limit.txt";
-        //std::string result = performOperation(filename);
-        //resultDisplay->buffer(new Fl_Text_Buffer());
-        //resultDisplay->buffer()->text(result.c_str());
+        opfile = opfile + "_limit.txt";
+        displayScene(opfile, option);
     }
 }
 
