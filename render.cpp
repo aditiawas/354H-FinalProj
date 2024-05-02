@@ -21,6 +21,23 @@
 OpenGLWindow* g_window = nullptr;
 float zoomFactor = 1.0f; // Initial zoom factor
 
+void HSVtoRGB(float h, float s, float v, float& r, float& g, float& b) {
+    int i = static_cast<int>(h * 6);
+    float f = h * 6 - i;
+    float p = v * (1 - s);
+    float q = v * (1 - f * s);
+    float t = v * (1 - (1 - f) * s);
+
+    switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }
+}
+
 void OpenGLWindow::InitGL() {
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
     glClearDepth(1.0);
@@ -96,15 +113,24 @@ void OpenGLWindow::DrawShape() {
     }
 
     glDisable(GL_LIGHTING); // Disable lighting
-    glColor3f(0.1f, 0.5f, 1.0f); // Set a fixed color
+    //glColor3f(0.1f, 0.5f, 1.0f); // Set a fixed color
 
-    if (!quadFaces.empty()) {
+        if (!quadFaces.empty()) {
         glBegin(GL_QUADS);
-        for (const QuadFace* face : quadFaces) {
+        for (size_t i = 0; i < quadFaces.size(); ++i) {
+            const QuadFace* face = quadFaces[i];
             int idx1 = face->v1;
             int idx2 = face->v2;
             int idx3 = face->v3;
             int idx4 = face->v4;
+
+            // Generate a unique color for each face
+            float hue = static_cast<float>(i) / quadFaces.size();
+            float saturation = 0.8f;
+            float value = 0.8f;
+            float r, g, b;
+            HSVtoRGB(hue, saturation, value, r, g, b);
+            glColor3f(r, g, b);
 
             glVertex3fv(glm::value_ptr(vertices[idx1]));
             glVertex3fv(glm::value_ptr(vertices[idx2]));
@@ -114,10 +140,19 @@ void OpenGLWindow::DrawShape() {
         glEnd();
     } else {
         glBegin(GL_TRIANGLES);
-        for (const TrimeshFace* face : faces) {
+        for (size_t i = 0; i < faces.size(); ++i) {
+            const TrimeshFace* face = faces[i];
             int idx1 = face->vertexIndices[0];
             int idx2 = face->vertexIndices[1];
             int idx3 = face->vertexIndices[2];
+
+            // Generate a unique color for each face
+            float hue = static_cast<float>(i) / faces.size();
+            float saturation = 0.8f;
+            float value = 0.8f;
+            float r, g, b;
+            HSVtoRGB(hue, saturation, value, r, g, b);
+            glColor3f(r, g, b);
 
             glVertex3fv(glm::value_ptr(vertices[idx1]));
             glVertex3fv(glm::value_ptr(vertices[idx2]));
