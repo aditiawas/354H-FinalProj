@@ -21,3 +21,5 @@ Added file browser, drop down, process button, slider and about menu
 A separate executable, triggered from within control flow
 ### Loop Subdivision
 Needs input file as trimeshes
+### Catmull Clark
+Needs input file as quadfaces

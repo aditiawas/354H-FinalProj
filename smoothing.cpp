@@ -25,6 +25,7 @@ Fl_Window* window;
 Fl_Menu_Bar* menuBar;
 Fl_Choice* dropdown;
 Fl_Button* processButton;
+Fl_Button* showLimitSurface;
 Fl_Text_Display* resultDisplay;
 Fl_Value_Slider* slider;
 
@@ -125,13 +126,16 @@ void performReadQuad(const std::string& filename, vector<glm::vec3> &vertices, v
 std::string performOperation(const std::string& filename, int option, int sliderValue) {
 
      string option_str;
+     if (option==0) //catmull-clark
+        option_str = "Catmull-Clark Algorithm";
+     else //loop subdivision
+        option_str = "Loop Subdivision Algorithm";
      string temp = "Option selected was: " + option_str + "\nFilename: " + filename + "\nSlider Value: " + std::to_string(sliderValue) + "\n";
 
      vector<glm::vec3> vertices;
 
      if (option==0) //catmull-clark
      {  
-        option_str = "Catmull-Clark Algorithm";
         vector <QuadFace*> quadfaces;
         performReadQuad(filename, vertices, quadfaces);
         catmullClark catmullObject = catmullClark(vertices,quadfaces);
@@ -140,7 +144,6 @@ std::string performOperation(const std::string& filename, int option, int slider
      }
      else if(option==1) //loop subdivision
      {
-        option_str = "Loop Subdivision Algorithm";
         vector<TrimeshFace> trimeshfaces;
         performReadTrimesh(filename, vertices, trimeshfaces);
         LoopSubdiv loopObject = LoopSubdiv(vertices, trimeshfaces);
@@ -188,6 +191,19 @@ void processButtonCallback(Fl_Widget* widget, void* data) {
     }
 }
 
+void showLimit(Fl_Widget* widget, void* data) {
+    // Get the selected file and option
+    const char* filename = window->label();
+
+    if (strlen(filename) == 0) {
+        fl_alert("Please select a file first.");
+    } else {
+        //string opfile = filename + "_limit.txt";
+        //std::string result = performOperation(filename);
+        //resultDisplay->buffer(new Fl_Text_Buffer());
+        //resultDisplay->buffer()->text(result.c_str());
+    }
+}
 
 
 int main() {
@@ -213,7 +229,10 @@ int main() {
     dropdown->add("Loop Subdivision");
 
     // Create the process button
-    processButton = new Fl_Button(350, 60, 100, 25, "Process");
+    processButton = new Fl_Button(270, 60, 100, 25, "Process");
+
+    // Create the limit surface button
+    showLimitSurface = new Fl_Button(430, 60, 150, 25, "Show limit surface");
 
     // Create the text display to show the result
     resultDisplay = new Fl_Text_Display(10, 100, 780, 480);
@@ -227,6 +246,8 @@ int main() {
 
     // Set the callbacks for the buttons and slider
     processButton->callback(processButtonCallback, window);
+
+    showLimitSurface->callback(showLimit, window);
 
     window->resizable(resultDisplay);
     window->end();

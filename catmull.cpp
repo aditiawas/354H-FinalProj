@@ -144,6 +144,7 @@ void catmullClark::computeEdgePoints(vector<glm::vec3> & facePoints, unordered_m
 
 void catmullClark::computeVertexPoints(vector<glm::vec3> & facePoints, unordered_map<string,glm::vec3>& edgePoints, vector<glm::vec3> &vertexPoints)
 {   
+    vertexPoints.resize(quadVertices.size(), glm::vec3(0.0f));
     for(int i=0;i<quadFaces.size();i++)
     {
         int a_idx = quadFaces[i]->v1;
@@ -197,7 +198,7 @@ void catmullClark::computeVertexPoints(vector<glm::vec3> & facePoints, unordered
 
 }
 
-std::pair<vector<glm::vec3>, std::vector<QuadFace*>> catmullClark::doSubdivision()
+std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivision()
 {   
     //opfile = filename + "_op" + std::to_string(iter) + ".out";
 
