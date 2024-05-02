@@ -8,12 +8,16 @@ CS 354H Computer Graphics Final Project --> https://www.cs.utexas.edu/~graphics/
 [ Y ] Add functionality to view intermediate subdivision levels.
 
 To compile, use the following commands:
+
 make clean
+
 make
 
 NOTE: This assignment has been tested on Ubuntu 22.04. If you want to run this on a Mac, run the 'make smoothing-apple' command instead of 'make'. 
 
+
 To run, execute the following command:
+
 ./smoothing
 
 Select the file you want to run subdivision on and the subdivision algorithm you want to use. Set the slider value and click 'Process'. 
