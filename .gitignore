@@ -38,3 +38,4 @@ render
 .vscode
 *.dSYM
 *.py
+unused/
