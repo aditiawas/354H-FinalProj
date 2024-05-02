@@ -88,42 +88,76 @@ std::pair<vector<glm::vec3>, std::vector<TrimeshFace> > LoopSubdiv::subdivLoop(c
         // Identify crease vertices
         std::unordered_set<int> creaseVertexSet(creaseVertices.begin(), creaseVertices.end());
 
+        // Build sharp edge set
+        std::unordered_set<std::string> sharpEdgeSet;
+        for (const auto& edge : creaseEdges) {
+            std::string edgeKey = std::to_string(edge.first) + "-" + std::to_string(edge.second);
+            std::string revEdgeKey = std::to_string(edge.second) + "-" + std::to_string(edge.first);
+            sharpEdgeSet.insert(edgeKey);
+            sharpEdgeSet.insert(revEdgeKey);
+        }
+
         for (const TrimeshFace& face : currentFaces) {
             HalfEdge anyHeInFace = halfEdgeDS[std::to_string(face.vertexIndices[0]) + std::to_string(face.vertexIndices[1])];
             HalfEdge nextHe = halfEdgeDS[std::to_string(face.vertexIndices[1]) + std::to_string(face.vertexIndices[2])];
             HalfEdge nextToNextHe = halfEdgeDS[std::to_string(face.vertexIndices[2]) + std::to_string(face.vertexIndices[0])];
 
-            // Update new coordinates inline
-            glm::vec3 midPointA(
-                (3.0 / 8.0) * anyHeInFace.vertices[0].x + (3.0 / 8.0) * anyHeInFace.vertices[1].x +
-                (1.0 / 8.0) * nextHe.vertices[1].x + (1.0 / 8.0) * halfEdgeDS[anyHeInFace.pairHalfEdgeKey].nextHalfEdgeVertices[1].x,
-                (3.0 / 8.0) * anyHeInFace.vertices[0].y + (3.0 / 8.0) * anyHeInFace.vertices[1].y +
-                (1.0 / 8.0) * nextHe.vertices[1].y + (1.0 / 8.0) * halfEdgeDS[anyHeInFace.pairHalfEdgeKey].nextHalfEdgeVertices[1].y,
-                (3.0 / 8.0) * anyHeInFace.vertices[0].z + (3.0 / 8.0) * anyHeInFace.vertices[1].z +
-                (1.0 / 8.0) * nextHe.vertices[1].z + (1.0 / 8.0) * halfEdgeDS[anyHeInFace.pairHalfEdgeKey].nextHalfEdgeVertices[1].z
-            );
-
-            glm::vec3 midPointC(
-                (3.0 / 8.0) * nextHe.vertices[0].x + (3.0 / 8.0) * nextHe.vertices[1].x +
-                (1.0 / 8.0) * nextToNextHe.vertices[1].x + (1.0 / 8.0) * halfEdgeDS[nextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].x,
-                (3.0 / 8.0) * nextHe.vertices[0].y + (3.0 / 8.0) * nextHe.vertices[1].y +
-                (1.0 / 8.0) * nextToNextHe.vertices[1].y + (1.0 / 8.0) * halfEdgeDS[nextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].y,
-                (3.0 / 8.0) * nextHe.vertices[0].z + (3.0 / 8.0) * nextHe.vertices[1].z +
-                (1.0 / 8.0) * nextToNextHe.vertices[1].z + (1.0 / 8.0) * halfEdgeDS[nextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].z
-            );
-
-            glm::vec3 midPointE(
-                (3.0 / 8.0) * nextToNextHe.vertices[0].x + (3.0 / 8.0) * nextToNextHe.vertices[1].x +
-                (1.0 / 8.0) * anyHeInFace.vertices[1].x + (1.0 / 8.0) * halfEdgeDS[nextToNextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].x,
-                (3.0 / 8.0) * nextToNextHe.vertices[0].y + (3.0 / 8.0) * nextToNextHe.vertices[1].y +
-                (1.0 / 8.0) * anyHeInFace.vertices[1].y + (1.0 / 8.0) * halfEdgeDS[nextToNextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].y,
-                (3.0 / 8.0) * nextToNextHe.vertices[0].z + (3.0 / 8.0) * nextToNextHe.vertices[1].z +
-                (1.0 / 8.0) * anyHeInFace.vertices[1].z + (1.0 / 8.0) * halfEdgeDS[nextToNextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].z
-            );
-
-            int miniAIdx;
+            // Check if the edges are sharp
             std::string aKey = std::to_string(face.vertexIndices[0]) + "-" + std::to_string(face.vertexIndices[1]);
             std::string aRevKey = std::to_string(face.vertexIndices[1]) + "-" + std::to_string(face.vertexIndices[0]);
+            std::string cKey = std::to_string(face.vertexIndices[1]) + "-" + std::to_string(face.vertexIndices[2]);
+            std::string cRevKey = std::to_string(face.vertexIndices[2]) + "-" + std::to_string(face.vertexIndices[1]);
+            std::string eKey = std::to_string(face.vertexIndices[2]) + "-" + std::to_string(face.vertexIndices[0]);
+            std::string eRevKey = std::to_string(face.vertexIndices[0]) + "-" + std::to_string(face.vertexIndices[2]);
+
+            bool isEdgeASharp = sharpEdgeSet.count(aKey) > 0 || sharpEdgeSet.count(aRevKey) > 0;
+            bool isEdgeCSharp = sharpEdgeSet.count(cKey) > 0 || sharpEdgeSet.count(cRevKey) > 0;
+            bool isEdgeESharp = sharpEdgeSet.count(eKey) > 0 || sharpEdgeSet.count(eRevKey) > 0;
+
+            // Update midpoint coordinates based on sharp edges
+            glm::vec3 midPointA;
+            if (isEdgeASharp) {
+                midPointA = (anyHeInFace.vertices[0] + anyHeInFace.vertices[1]) * 0.5f;
+            } else {
+                midPointA = glm::vec3(
+                    (3.0 / 8.0) * anyHeInFace.vertices[0].x + (3.0 / 8.0) * anyHeInFace.vertices[1].x +
+                    (1.0 / 8.0) * nextHe.vertices[1].x + (1.0 / 8.0) * halfEdgeDS[anyHeInFace.pairHalfEdgeKey].nextHalfEdgeVertices[1].x,
+                    (3.0 / 8.0) * anyHeInFace.vertices[0].y + (3.0 / 8.0) * anyHeInFace.vertices[1].y +
+                    (1.0 / 8.0) * nextHe.vertices[1].y + (1.0 / 8.0) * halfEdgeDS[anyHeInFace.pairHalfEdgeKey].nextHalfEdgeVertices[1].y,
+                    (3.0 / 8.0) * anyHeInFace.vertices[0].z + (3.0 / 8.0) * anyHeInFace.vertices[1].z +
+                    (1.0 / 8.0) * nextHe.vertices[1].z + (1.0 / 8.0) * halfEdgeDS[anyHeInFace.pairHalfEdgeKey].nextHalfEdgeVertices[1].z
+                );
+            }
+
+            glm::vec3 midPointC;
+            if (isEdgeCSharp) {
+                midPointC = (nextHe.vertices[0] + nextHe.vertices[1]) * 0.5f;
+            } else {
+                midPointC = glm::vec3(
+                    (3.0 / 8.0) * nextHe.vertices[0].x + (3.0 / 8.0) * nextHe.vertices[1].x +
+                    (1.0 / 8.0) * nextToNextHe.vertices[1].x + (1.0 / 8.0) * halfEdgeDS[nextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].x,
+                    (3.0 / 8.0) * nextHe.vertices[0].y + (3.0 / 8.0) * nextHe.vertices[1].y +
+                    (1.0 / 8.0) * nextToNextHe.vertices[1].y + (1.0 / 8.0) * halfEdgeDS[nextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].y,
+                    (3.0 / 8.0) * nextHe.vertices[0].z + (3.0 / 8.0) * nextHe.vertices[1].z +
+                    (1.0 / 8.0) * nextToNextHe.vertices[1].z + (1.0 / 8.0) * halfEdgeDS[nextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].z
+                );
+            }
+
+            glm::vec3 midPointE;
+            if (isEdgeESharp) {
+                midPointE = (nextToNextHe.vertices[0] + nextToNextHe.vertices[1]) * 0.5f;
+            } else {
+                midPointE = glm::vec3(
+                    (3.0 / 8.0) * nextToNextHe.vertices[0].x + (3.0 / 8.0) * nextToNextHe.vertices[1].x +
+                    (1.0 / 8.0) * anyHeInFace.vertices[1].x + (1.0 / 8.0) * halfEdgeDS[nextToNextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].x,
+                    (3.0 / 8.0) * nextToNextHe.vertices[0].y + (3.0 / 8.0) * nextToNextHe.vertices[1].y +
+                    (1.0 / 8.0) * anyHeInFace.vertices[1].y + (1.0 / 8.0) * halfEdgeDS[nextToNextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].y,
+                    (3.0 / 8.0) * nextToNextHe.vertices[0].z + (3.0 / 8.0) * nextToNextHe.vertices[1].z +
+                    (1.0 / 8.0) * anyHeInFace.vertices[1].z + (1.0 / 8.0) * halfEdgeDS[nextToNextHe.pairHalfEdgeKey].nextHalfEdgeVertices[1].z
+                );
+            }
+
+            int miniAIdx;
             if (vertexLocToIdx.count(aKey)) {
                 miniAIdx = vertexLocToIdx[aKey];
             } else if (vertexLocToIdx.count(aRevKey)) {
@@ -151,8 +185,6 @@ std::pair<vector<glm::vec3>, std::vector<TrimeshFace> > LoopSubdiv::subdivLoop(c
             }
 
             int miniCIdx;
-            std::string cKey = std::to_string(face.vertexIndices[1]) + "-" + std::to_string(face.vertexIndices[2]);
-            std::string cRevKey = std::to_string(face.vertexIndices[2]) + "-" + std::to_string(face.vertexIndices[1]);
             if (vertexLocToIdx.count(cKey)) {
                 miniCIdx = vertexLocToIdx[cKey];
             } else if (vertexLocToIdx.count(cRevKey)) {
@@ -180,8 +212,6 @@ std::pair<vector<glm::vec3>, std::vector<TrimeshFace> > LoopSubdiv::subdivLoop(c
             }
 
             int miniEIdx;
-            std::string eKey = std::to_string(face.vertexIndices[2]) + "-" + std::to_string(face.vertexIndices[0]);
-            std::string eRevKey = std::to_string(face.vertexIndices[0]) + "-" + std::to_string(face.vertexIndices[2]);
             if (vertexLocToIdx.count(eKey)) {
                 miniEIdx = vertexLocToIdx[eKey];
             } else if (vertexLocToIdx.count(eRevKey)) {
@@ -223,6 +253,21 @@ std::pair<vector<glm::vec3>, std::vector<TrimeshFace> > LoopSubdiv::subdivLoop(c
                 updatedCreaseVertexSet.insert(vertexLocToIdx[key]);
             }
         }
+
+        // Update sharp edges
+        std::vector<std::pair<int, int> > updatedSharpEdges;
+        for (const auto& edge : creaseEdges) {
+            std::string edgeKey = std::to_string(edge.first) + "-" + std::to_string(edge.second);
+            std::string revEdgeKey = std::to_string(edge.second) + "-" + std::to_string(edge.first);
+
+            if (vertexLocToIdx.count(edgeKey)) {
+                int newIdx1 = vertexLocToIdx[edgeKey];
+                int newIdx2 = vertexLocToIdx[revEdgeKey];
+                updatedSharpEdges.push_back(std::make_pair(newIdx1, newIdx2));
+            }
+        }
+
+        creaseEdges = std::move(updatedSharpEdges);
 
         // Update old coordinates in newVertices using existing old coordinates
         for (const auto& vertexPair : oldVertexNeighbors) {
