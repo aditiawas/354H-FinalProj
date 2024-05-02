@@ -23,8 +23,8 @@ If you want to see the limit surface for a selected file, click the 'Limit surfa
 ## Summary
 ### GUI
 Added file browser, drop down, process button, slider and about menu
-### Render window
-A separate executable, triggered from within control flow
+### Rendering
+Triggered from within control flow to display the objects and handle user interactions
 ### Loop Subdivision
 Needs input file as trimeshes
 ### Catmull Clark
