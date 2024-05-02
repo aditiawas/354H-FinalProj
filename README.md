@@ -34,6 +34,8 @@ We have precomputed the limit surfaces, upon pressing the 'limit surface' button
 ### Sharp creases
 For Catmull Clark, a seperate 'Catmull Clark Sharp Creases' option should be selected to handle sharp creases. Your input quad file should have a 's' after every sharp vertex (corresponding to an endpoint of a sharp edge) and a 'n' after every non sharp vertex.\
 For Loop Subdivision, sharp vertices are specified with the lines 'cv' followed by the index of the sharp vertex. No seperate option has to be selected.
+### Extraordinary vertices
+Both algorithms handle these automatically
 
 ## Extra credit survey
 We have both submitted the online course instructor survey.
