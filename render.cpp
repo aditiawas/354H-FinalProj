@@ -6,6 +6,7 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include <GL/gl.h>
+#include <GL/freeglut.h>
 #endif
 
 #include <vector>

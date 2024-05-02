@@ -38,7 +38,7 @@ public:
     std::vector<TrimeshFace*> faces;
     std::vector<QuadFace*> quadFaces;
 
-    OpenGLWindow(int argc, char** argv, std::string filename, bool renderQuads) : vertices(vertices), faces(faces), quadFaces(quadFaces) {
+    OpenGLWindow(int argc, char** argv, std::string filename, bool renderQuads) {
         glutInit(&argc, argv); //ADITI: check
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
         glutInitWindowSize(kWindowWidth, kWindowHeight);
