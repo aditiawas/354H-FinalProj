@@ -31,19 +31,31 @@ struct VertexHash {
     }
 };
 
+struct PairHash {
+    template <class T1, class T2>
+    std::size_t operator()(const std::pair<T1, T2>& pair) const {
+        return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+    }
+};
+
 struct LoopSubdiv {
 public:
     std::string opfile;
     vector<glm::vec3> vertices;
     vector<TrimeshFace> trimeshFaces;
 
-    LoopSubdiv(vector<glm::vec3> vertices, vector<TrimeshFace> trimeshFaces) {
+    vector<int> creaseVertices;
+    vector<std::pair<int, int> > creaseEdges;
+
+    LoopSubdiv(vector<glm::vec3> vertices, vector<TrimeshFace> trimeshFaces, vector<int> cv, vector<std::pair<int, int> > ce) {
         this->vertices = vertices;
         this->trimeshFaces = trimeshFaces;
+        this->creaseVertices = cv;
+        this->creaseEdges = ce;
     }
 
     std::pair<vector<glm::vec3>, std::vector<TrimeshFace> > subdivLoop(const vector<glm::vec3>& vertices, const std::vector<TrimeshFace>& faces, int iterations);
     string doSubdivision(std::string filename, int iter);
     void printSubdividedMesh(std::vector<glm::vec3> v, std::vector<TrimeshFace> f);
-    void displayScene(); // Retained
+    void displayScene();
 };

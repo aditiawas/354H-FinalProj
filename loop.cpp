@@ -85,6 +85,9 @@ std::pair<vector<glm::vec3>, std::vector<TrimeshFace> > LoopSubdiv::subdivLoop(c
         std::unordered_map<std::string, int> vertexLocToIdx;
         std::unordered_map<int, vector<glm::vec3> > oldVertexNeighbors;
 
+        // Identify crease vertices
+        std::unordered_set<int> creaseVertexSet(creaseVertices.begin(), creaseVertices.end());
+
         for (const TrimeshFace& face : currentFaces) {
             HalfEdge anyHeInFace = halfEdgeDS[std::to_string(face.vertexIndices[0]) + std::to_string(face.vertexIndices[1])];
             HalfEdge nextHe = halfEdgeDS[std::to_string(face.vertexIndices[1]) + std::to_string(face.vertexIndices[2])];
@@ -212,6 +215,15 @@ std::pair<vector<glm::vec3>, std::vector<TrimeshFace> > LoopSubdiv::subdivLoop(c
             newFaces.push_back(TrimeshFace( miniAIdx, miniCIdx, miniEIdx ));
         }
 
+        // Update crease vertex indices based on the new vertex locations
+        std::unordered_set<int> updatedCreaseVertexSet;
+        for (int creaseVertexIndex : creaseVertexSet) {
+            std::string key = std::to_string(creaseVertexIndex);
+            if (vertexLocToIdx.count(key)) {
+                updatedCreaseVertexSet.insert(vertexLocToIdx[key]);
+            }
+        }
+
         // Update old coordinates in newVertices using existing old coordinates
         for (const auto& vertexPair : oldVertexNeighbors) {
             int vertexIndex = vertexPair.first;
@@ -219,7 +231,11 @@ std::pair<vector<glm::vec3>, std::vector<TrimeshFace> > LoopSubdiv::subdivLoop(c
             int n = neighborOldVertices.size();
 
             double beta;
-            if (n == 6) {
+            if (updatedCreaseVertexSet.count(vertexIndex) > 0) {
+                // Skip updating coordinates for crease vertices
+                beta = 0;
+            }
+            else if ( n==6 ) {
                 beta = 3.0 / 16.0;
             } else {
                 double alpha = (4.0 - 2.0 * cos(2.0 * M_PI / n)) / 9.0;
@@ -232,6 +248,10 @@ std::pair<vector<glm::vec3>, std::vector<TrimeshFace> > LoopSubdiv::subdivLoop(c
             vertex.z = (1.0 - n * beta) * vertex.z + beta * std::accumulate(neighborOldVertices.begin(), neighborOldVertices.end(), 0.0, sumZCoords);
         }
 
+        creaseVertices.clear();
+        for (int element : updatedCreaseVertexSet) {
+            creaseVertices.push_back(element);
+        }
         currentVertices = std::move(newVertices);
         currentFaces = std::move(newFaces);
     }
