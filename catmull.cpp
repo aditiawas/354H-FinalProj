@@ -152,40 +152,42 @@ void catmullClark::computeVertexPoints(vector<glm::vec3> & facePoints, unordered
         int c_idx = quadFaces[i]->v3;
         int d_idx = quadFaces[i]->v4;
 
-        vertexPoints[a_idx] += 1.0f*facePoints[i]; //add the contribution of this face to the vertex a
-        vertexPoints[a_idx] /= countFacesAdjacent[a_idx]; //F on wikipedia page is the average of all facepoints
+        float a_divisor = countFacesAdjacent[a_idx];
+        float b_divisor = countFacesAdjacent[b_idx];
+        float c_divisor = countFacesAdjacent[c_idx];
+        float d_divisor = countFacesAdjacent[d_idx];
+
+        vertexPoints[a_idx] += (1.0f*facePoints[i])/(a_divisor); //add the contribution of this face to the vertex a
+         //F on wikipedia page is the average of all facepoints
         //so while adding each face contribution, divide by total n (where n is the total number of faces touching a)
 
-        vertexPoints[b_idx] += 1.0f*facePoints[i]; //add the contribution of this face to the vertex b
-        vertexPoints[b_idx] /= countFacesAdjacent[b_idx];
+        vertexPoints[b_idx] += (1.0f*facePoints[i])/(b_divisor); //add the contribution of this face to the vertex b
+        
 
-        vertexPoints[c_idx] += 1.0f*facePoints[i]; //add the contribution of this face to the vertex c
-        vertexPoints[c_idx] /= countFacesAdjacent[c_idx];
+        vertexPoints[c_idx] += (1.0f*facePoints[i])/(c_divisor); //add the contribution of this face to the vertex c
+        
 
-        vertexPoints[d_idx] += facePoints[i]; //add the contribution of this face to the vertex d
-        vertexPoints[d_idx] /= countFacesAdjacent[d_idx];
+        vertexPoints[d_idx] += (1.0f*facePoints[i])/(d_divisor); //add the contribution of this face to the vertex d
 
         //done adding F
 
-        vertexPoints[a_idx] += 0.5f*(quadVertices[a_idx] + quadVertices[b_idx]); //average of this edge
-        vertexPoints[a_idx] += 0.5f*(quadVertices[a_idx] + quadVertices[d_idx]); //avergae of this edge 
-        vertexPoints[a_idx] /= countFacesAdjacent[a_idx];
+        vertexPoints[a_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[b_idx]))/(a_divisor); //average of this edge
+        vertexPoints[a_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[d_idx]))/(a_divisor); //avergae of this edge 
         //since we have to add 2R to the sum 
         //we can just blindly add each edge to the sum 
         //it will be counted twice for each face 
         
 
-        vertexPoints[b_idx] += 0.5f*(quadVertices[a_idx] + quadVertices[b_idx]); 
-        vertexPoints[b_idx] += 0.5f*(quadVertices[b_idx] + quadVertices[c_idx]); 
-        vertexPoints[b_idx] /= countFacesAdjacent[b_idx];
+        vertexPoints[b_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[b_idx]))/(b_divisor); 
+        vertexPoints[b_idx] += (0.5f*(quadVertices[b_idx] + quadVertices[c_idx]))/(b_divisor); 
 
-        vertexPoints[c_idx] += 0.5f*(quadVertices[c_idx] + quadVertices[b_idx]); 
-        vertexPoints[c_idx] += 0.5f*(quadVertices[c_idx] + quadVertices[d_idx]); 
-        vertexPoints[c_idx] /= countFacesAdjacent[c_idx];
 
-        vertexPoints[d_idx] += 0.5f*(quadVertices[a_idx] + quadVertices[d_idx]); 
-        vertexPoints[d_idx] += 0.5f*(quadVertices[c_idx] + quadVertices[d_idx]); 
-        vertexPoints[d_idx] /= countFacesAdjacent[d_idx];
+        vertexPoints[c_idx] += (0.5f*(quadVertices[c_idx] + quadVertices[b_idx]))/(c_divisor); 
+        vertexPoints[c_idx] += (0.5f*(quadVertices[c_idx] + quadVertices[d_idx]))/(c_divisor); 
+
+
+        vertexPoints[d_idx] += (0.5f*(quadVertices[a_idx] + quadVertices[d_idx]))/(d_divisor); 
+        vertexPoints[d_idx] += (0.5f*(quadVertices[c_idx] + quadVertices[d_idx]))/(d_divisor); 
         //done adding 2R
     }
     for(int i =0; i < quadVertices.size(); i++)
@@ -462,6 +464,9 @@ std::pair<vector<glm::vec3>, std::vector<QuadFace*> > catmullClark::doSubdivisio
     this->quadFaces = newQuadFaces;
     this->quadNormals = newQuadNormals;
     this->quadVertices = newQuadVertices;
+
+    countFacesAdjacent.clear();
+    edgesToFaces.clear();
 
     //printf("\n After subdivision \n");
     
