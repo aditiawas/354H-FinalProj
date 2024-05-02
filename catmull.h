@@ -14,6 +14,7 @@ struct catmullClark{
         vector<QuadFace*> quadFaces;
         vector<glm::vec3> quadNormals;
         vector<int> countFacesAdjacent;
+        vector<int> vertex_sharpness;
         unordered_map<string,int> edgesToFaces; //edge mapped to each face it is a part of
         void initializeEdges();
         void computeFacePoints(vector<glm::vec3>&);
@@ -29,6 +30,40 @@ struct catmullClark{
     {
         quadVertices = vertices;
         quadFaces = faces;
+        vertex_sharpness = vector<int>(vertices.size(),0);
+        quadNormals.clear();
+        countFacesAdjacent.clear();
+        edgesToFaces.clear();
+
+        for(int i=0; i<quadFaces.size();i++)
+        {
+            int a_idx = quadFaces[i]->v1; //remember, we stored indexes of the vertices in the quad array
+            int b_idx = quadFaces[i]->v2;
+            int c_idx = quadFaces[i]->v3;
+
+            glm::vec3 bmina = quadVertices[b_idx] - quadVertices[a_idx];
+            glm::vec3 cmina = quadVertices[c_idx] - quadVertices[a_idx];
+            bmina = glm::normalize(bmina);
+            cmina = glm::normalize(cmina);
+
+            glm::vec3 plane_normal = glm::cross(bmina,cmina);
+            plane_normal = glm::normalize(plane_normal);
+
+            quadNormals.push_back(plane_normal); //for each face, push back the face normal
+
+        }
+
+        printf("\n Size of quadVertices %d \n", int(quadVertices.size()));
+        printf("\n Size of quadFaces %d \n", int(quadFaces.size()));
+        printf("\n Size of quadNormals %d \n", int(quadNormals.size()));
+
+    }
+
+    catmullClark(vector<glm::vec3> vertices, vector<QuadFace*> faces, vector<int> sharpness )
+    {
+        quadVertices = vertices;
+        quadFaces = faces;
+        vertex_sharpness = sharpness;
         quadNormals.clear();
         countFacesAdjacent.clear();
         edgesToFaces.clear();

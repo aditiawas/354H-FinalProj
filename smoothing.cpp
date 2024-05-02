@@ -122,6 +122,76 @@ void performReadQuad(const std::string& filename, vector<glm::vec3> &vertices, v
 
 }
 
+void performReadQuadSharp(const std::string& filename, vector<glm::vec3> &vertices, vector<QuadFace*> &quadfaces, vector<int>& sharpness )
+{   
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return;
+    }
+
+    std::string line;
+    int num_vertices = 0;
+    while (std::getline(file, line)) 
+    {
+        std::istringstream iss(line);
+        std::string token;
+        iss >> token;
+        if (token == "v") 
+        {
+            float x, y, z;
+            char sharp;
+            if (iss >> x >> y >> z >> sharp) 
+            {
+                //printf("Vertex: %5.2f %5.2f %5.2f \n",x,y,z);
+                vertices.push_back(glm::vec3(x,y,z));
+                num_vertices +=1;
+                if(sharp == 's')
+                {
+                    sharpness.push_back(1);
+                    //printf("Sharpness of vertex %d is %d", num_vertices, 1);
+                }
+                else if(sharp=='n')
+                {
+                    sharpness.push_back(0);
+                    //printf("Sharpness of vertex %d is %d", num_vertices, 0);
+                }
+                else
+                {
+                    std::cerr << "Invalid sharp vertex format in line: " << line << std::endl;
+                }
+                
+            } 
+            else 
+            {
+                std::cerr << "Invalid vertex format in line: " << line << std::endl;
+            }
+        } 
+        else if (token == "f") 
+        {
+            int a, b, c, d;
+            if (iss >> a >> b >> c >>d) 
+            {
+                //std::cout << "Face: " << a << ", " << b << ", " << c << ", " <<d << std::endl;
+                QuadFace* tempQuadFace = new QuadFace(a-1,b-1,c-1,d-1);
+                quadfaces.push_back(tempQuadFace);
+
+            } 
+            else 
+            {
+                std::cerr << "Invalid face format in line: " << line << std::endl;
+            }
+        } 
+        else 
+        {
+            std::cerr << "Unknown token: " << token << " in line: " << line << std::endl;
+        }
+    }
+    printf("Done with readQuad...");
+    file.close();
+
+}
+
 // Function to perform the operation on the selected file
 std::string performOperation(const std::string& filename, int option, int sliderValue) {
 
@@ -149,6 +219,19 @@ std::string performOperation(const std::string& filename, int option, int slider
         LoopSubdiv loopObject = LoopSubdiv(vertices, trimeshfaces);
         string log = loopObject.doSubdivision(filename, sliderValue);
         temp += log;
+     }
+     else if(option==2) //sharp catmull-clark
+     {
+        vector <QuadFace*> quadfaces;
+        vector<int> sharpness;
+        performReadQuadSharp(filename, vertices, quadfaces, sharpness);
+        catmullClark catmullObject = catmullClark(vertices,quadfaces,sharpness);
+        for(int i =0; i<vertices.size();i++)
+        {
+            printf("\n vertex sharpness of %d is %d \n", i, sharpness[i]);
+        }
+        string log = catmullObject.doSubdivisionIteratively(sliderValue, filename);
+        temp+=log;
      }
      else
      {
@@ -241,6 +324,7 @@ int main() {
     dropdown = new Fl_Choice(300, 30, 200, 25, "Options ");
     dropdown->add("Catmull-Clark");
     dropdown->add("Loop Subdivision");
+    dropdown->add("Catmull-Clark with Sharp Edges");
 
     // Create the process button
     processButton = new Fl_Button(270, 60, 100, 25, "Process");
