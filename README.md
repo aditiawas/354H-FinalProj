@@ -39,4 +39,4 @@ For catmull clark, a seperate 'Catmull Clark Sharp Creases' option should be sel
 
 For Loop, sharp vertices are specified with the lines 'cv' followed by the index of the sharp vertex. No seperate option has to be selected. 
 ## Extra credit survey
-We have both submitted the onlien course instructor survey.
+We have both submitted the online course instructor survey.
