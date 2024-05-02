@@ -17,7 +17,7 @@ struct catmullClark{
         vector<int> countFacesAdjacent;
         vector<int> countSharpEdgesAdjacent;
         unordered_map<string,int> edgesToFaces; //edge mapped to each face it is a part of
-        unordered_map<int,vector<int>> verticesToSharpEdgeVertices; //vertex mapped to the other endpoints of the sharp edges that are incident upon it
+        unordered_map<int,vector<int> > verticesToSharpEdgeVertices; //vertex mapped to the other endpoints of the sharp edges that are incident upon it
         void initializeEdges();
         void computeFacePoints(vector<glm::vec3>&);
         void computeEdgePoints(vector<glm::vec3>&, unordered_map<string,glm::vec3>&);

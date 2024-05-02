@@ -218,12 +218,18 @@ std::pair<vector<glm::vec3>, std::vector<TrimeshFace> > LoopSubdiv::subdivLoop(c
             const vector<glm::vec3>& neighborOldVertices = vertexPair.second;
             int n = neighborOldVertices.size();
 
-            double u = (n == 3) ? 3.0 / 16.0 : 3.0 / (8.0 * n);
+            double beta;
+            if (n == 6) {
+                beta = 3.0 / 16.0;
+            } else {
+                double alpha = (4.0 - 2.0 * cos(2.0 * M_PI / n)) / 9.0;
+                beta = (1.0 - alpha) / n;
+            }
 
             glm::vec3& vertex = newVertices[vertexIndex];
-            vertex.x = (1.0 - n * u) * vertex.x + u * std::accumulate(neighborOldVertices.begin(), neighborOldVertices.end(), 0.0, sumXCoords);
-            vertex.y = (1.0 - n * u) * vertex.y + u * std::accumulate(neighborOldVertices.begin(), neighborOldVertices.end(), 0.0, sumYCoords);
-            vertex.z = (1.0 - n * u) * vertex.z + u * std::accumulate(neighborOldVertices.begin(), neighborOldVertices.end(), 0.0, sumZCoords);
+            vertex.x = (1.0 - n * beta) * vertex.x + beta * std::accumulate(neighborOldVertices.begin(), neighborOldVertices.end(), 0.0, sumXCoords);
+            vertex.y = (1.0 - n * beta) * vertex.y + beta * std::accumulate(neighborOldVertices.begin(), neighborOldVertices.end(), 0.0, sumYCoords);
+            vertex.z = (1.0 - n * beta) * vertex.z + beta * std::accumulate(neighborOldVertices.begin(), neighborOldVertices.end(), 0.0, sumZCoords);
         }
 
         currentVertices = std::move(newVertices);
