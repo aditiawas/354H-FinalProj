@@ -19,8 +19,9 @@ struct catmullClark{
         void computeFacePoints(vector<glm::vec3>&);
         void computeEdgePoints(vector<glm::vec3>&, unordered_map<string,glm::vec3>&);
         void computeVertexPoints(vector<glm::vec3>&, unordered_map<string,glm::vec3>&, vector<glm::vec3>&);
-        void doSubdivision(std::string filename);
-        void printSubdividedMesh();
+        std::pair<vector<glm::vec3>, std::vector<QuadFace*>> doSubdivision();
+        string doSubdivisionIteratively(int, std::string);
+        void printSubdividedMesh(vector<glm::vec3>, vector<QuadFace*>);
         void displayScene();
 
 

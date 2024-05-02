@@ -135,7 +135,8 @@ std::string performOperation(const std::string& filename, int option, int slider
         vector <QuadFace*> quadfaces;
         performReadQuad(filename, vertices, quadfaces);
         catmullClark catmullObject = catmullClark(vertices,quadfaces);
-        catmullObject.doSubdivision(filename);
+        string log = catmullObject.doSubdivisionIteratively(sliderValue, filename);
+        temp+=log;
      }
      else if(option==1) //loop subdivision
      {
