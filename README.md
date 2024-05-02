@@ -39,3 +39,6 @@ Both algorithms handle these automatically
 
 ## Extra credit survey
 We have both submitted the online course instructor survey.
+
+## Credits for models
+All Catmull Clark .obj quad files were taken from this repositry: https://github.com/BugelNiels/parallel-cpu-catmull-clark-subdivision/tree/main/models
