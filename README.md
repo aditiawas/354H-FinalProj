@@ -25,6 +25,7 @@ If you want to see the limit surface for a selected file, click the 'Limit surfa
 Added file browser, drop down, process button, slider and about menu
 ### Rendering
 Triggered from within control flow to display the objects and handle user interactions
+We can use i and o keys for zooming and a, s, d and w keys for translation and also use the mouse to move around
 ### Loop Subdivision
 Needs input file as trimeshes
 ### Catmull Clark
